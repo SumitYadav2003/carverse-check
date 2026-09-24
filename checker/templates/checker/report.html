@@ -1,0 +1,110 @@
+{% extends "checker/base.html" %}
+{% block title %}{{ vehicle.make|title }} {{ vehicle.model|title }} ({{ vehicle.registration }}) — Carverse Check{% endblock %}
+{% block body_class %}page-report{% endblock %}
+{% block topbar_left %}
+<a class="icon-btn" href="{% url 'checker:home' %}" aria-label="Back to search">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m11 18-6-6 6-6"/></svg>
+</a>
+{% endblock %}
+{% block content %}
+<div class="report">
+  {% if is_sample %}
+  <p class="sample-note">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg>
+    Sample vehicle — made-up data for this demo.
+  </p>
+  {% endif %}
+
+  <section class="car rise">
+    <span class="plate-chip plate-chip-lg">{{ vehicle.registration }}</span>
+    <h1 class="car-title">{{ vehicle.make|title }} {{ vehicle.model|title }}</h1>
+    <div class="pills">
+      {% if first_used %}<span class="pill">First used {{ first_used }}</span>{% endif %}
+      {% if vehicle.fuel_type %}<span class="pill">{{ vehicle.fuel_type }}{% if vehicle.engine_size %} · {{ vehicle.engine_size }} cc{% endif %}</span>{% endif %}
+      {% if vehicle.colour %}<span class="pill">{{ vehicle.colour }}</span>{% endif %}
+    </div>
+  </section>
+
+  <section class="card verdict rise" style="--d:.08s">
+    <p class="kicker {% if serious_count %}kicker-serious{% elif ask_count %}kicker-ask{% else %}kicker-clear{% endif %}">VERDICT</p>
+    <p class="verdict-text">{{ verdict }}</p>
+    {% if serious_count or ask_count %}
+    <div class="bars">
+      <div class="bar-row"><span>{{ serious_count }} serious</span><div class="bar-track"><div class="bar bar-serious" style="width: {{ serious_pct }}%"></div></div></div>
+      <div class="bar-row"><span>{{ ask_count }} to ask about</span><div class="bar-track"><div class="bar bar-ask" style="width: {{ ask_pct }}%; animation-delay: .65s"></div></div></div>
+    </div>
+    {% endif %}
+  </section>
+
+  <section class="stats rise" style="--d:.14s" aria-label="Key numbers">
+    <div class="stat"><span class="stat-num">{{ stats.latest_miles|default:"—" }}</span><span class="muted">miles at last MOT</span></div>
+    <div class="stat"><span class="stat-num">{{ stats.avg_miles|default:"—" }}</span><span class="muted">{% if stats.avg_miles %}miles a year on average{% else %}average not shown — readings don't add up{% endif %}</span></div>
+    <div class="stat"><span class="stat-num">{{ stats.test_count }}</span><span class="muted">MOT{{ stats.test_count|pluralize }} on record</span></div>
+    <div class="stat"><span class="stat-num">{{ stats.failed_count }}</span><span class="muted">failed MOT{{ stats.failed_count|pluralize }}</span></div>
+  </section>
+
+  <section class="findings" aria-labelledby="found-h">
+    <h2 id="found-h" class="section-title">What we found</h2>
+    {% for f in findings %}
+    <article class="card finding {% if f.serious %}finding-serious{% else %}finding-ask{% endif %} rise" style="--d:{{ f.delay_ms }}ms">
+      <span class="tag {% if f.serious %}tag-serious{% else %}tag-ask{% endif %}">{% if f.serious %}SERIOUS{% else %}ASK ABOUT{% endif %}</span>
+      <h3 class="finding-title">{{ f.title }}</h3>
+      <p class="finding-detail">{{ f.detail }}</p>
+      <div class="chips">{% for c in f.chips %}<a class="chip" href="#{{ c.anchor }}">{{ c.label }}</a>{% endfor %}</div>
+    </article>
+    {% empty %}
+    <article class="card finding finding-clear rise">
+      <span class="tag tag-clear">ALL CLEAR</span>
+      <h3 class="finding-title">Nothing stood out in the MOT history</h3>
+      <p class="finding-detail">No mileage drops, dangerous defects, repeated warnings or long gaps between tests. It's still worth a test drive and an independent inspection.</p>
+    </article>
+    {% endfor %}
+  </section>
+
+  {% if chart %}
+  <section class="card rise" style="--d:.5s" aria-labelledby="chart-h">
+    <h2 id="chart-h" class="section-title">Mileage over time</h2>
+    <svg class="chart" viewBox="0 0 {{ chart.width }} {{ chart.height }}" role="img" aria-label="{{ chart.description }}">
+      <line x1="{{ chart.left }}" y1="{{ chart.baseline }}" x2="{{ chart.right }}" y2="{{ chart.baseline }}" stroke="#2E322B"/>
+      <line x1="{{ chart.left }}" y1="{{ chart.top }}" x2="{{ chart.right }}" y2="{{ chart.top }}" stroke="#22251F" stroke-dasharray="3 5"/>
+      <text x="{{ chart.right }}" y="{{ chart.top|add:12 }}" text-anchor="end" class="chart-label">{{ chart.top_label }}</text>
+      <text x="{{ chart.right }}" y="{{ chart.baseline|add:-6 }}" text-anchor="end" class="chart-label">{{ chart.bottom_label }}</text>
+      {% for s in chart.segments %}
+        {% if s.kind == "gap" %}<path d="{{ s.d }}" class="seg-gap"/>
+        {% elif s.kind == "drop" %}<path d="{{ s.d }}" class="seg-drop draw" pathLength="1" style="animation-delay: {{ s.delay_ms }}ms"/>
+        {% else %}<path d="{{ s.d }}" class="seg draw" pathLength="1" style="animation-delay: {{ s.delay_ms }}ms"/>{% endif %}
+      {% endfor %}
+      {% for p in chart.points %}<circle cx="{{ p.cx }}" cy="{{ p.cy }}" r="4" class="dot"/>{% endfor %}
+      <text x="{{ chart.left }}" y="{{ chart.height|add:-8 }}" class="chart-label">{{ chart.start_year }}</text>
+      <text x="{{ chart.right }}" y="{{ chart.height|add:-8 }}" text-anchor="end" class="chart-label">{{ chart.end_year }}</text>
+    </svg>
+    <p class="muted small">
+      {% if chart.has_drop %}The orange line shows where recorded mileage went down.{% else %}No drops in recorded mileage.{% endif %}
+      Dashed lines mark long gaps with no MOT.
+      {% if chart.unreadable %}The reading on {{ chart.unreadable|join:", " }} was marked unreadable by the tester, so it's left out.{% endif %}
+    </p>
+  </section>
+  {% endif %}
+
+  <section class="history rise" style="--d:.56s" aria-labelledby="hist-h">
+    <h2 id="hist-h" class="section-title">Full MOT history</h2>
+    <ol class="timeline">
+      {% for row in timeline %}
+        {% if row.is_gap %}
+        <li class="tl-row tl-gap"><span class="tl-date"></span><span>{{ row.text }}</span></li>
+        {% else %}
+        <li class="tl-row" id="{{ row.anchor }}">
+          <span class="tl-date">{{ row.date }}</span>
+          <div><p class="tl-result {% if row.passed %}is-pass{% else %}is-fail{% endif %}">{{ row.result }}</p><p class="muted small">{{ row.detail }}</p></div>
+        </li>
+        {% endif %}
+      {% endfor %}
+    </ol>
+  </section>
+
+  <footer class="report-foot">
+    <p>Source: DVSA MOT history. MOT records can't show accident damage, outstanding finance or service history — check those separately.</p>
+    <a href="{% url 'checker:home' %}">Check another car</a>
+  </footer>
+</div>
+{% endblock %}

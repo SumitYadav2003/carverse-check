@@ -1,0 +1,26 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111210">
+  <title>{% block title %}Carverse Check — used-car MOT history check{% endblock %}</title>
+  <meta name="description" content="Check a UK car's official MOT history before you buy: mileage problems, repeated warnings and dangerous defects, explained in plain English.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Barlow+Condensed:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'checker/css/site.css' %}">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="topbar">
+    {% block topbar_left %}<span class="topbar-spacer"></span>{% endblock %}
+    <a class="wordmark" href="{% url 'checker:home' %}" aria-label="Carverse Check home">
+      <span class="wordmark-name">Carverse</span><span class="wordmark-tag">CHECK</span>
+    </a>
+    {% block topbar_right %}<span class="topbar-spacer"></span>{% endblock %}
+  </header>
+  <main id="main">{% block content %}{% endblock %}</main>
+  <script src="{% static 'checker/js/site.js' %}" defer></script>
+</body>
+</html>

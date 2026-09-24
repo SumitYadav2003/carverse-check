@@ -1,0 +1,14 @@
+{% extends "checker/base.html" %}
+{% block title %}No record found — Carverse Check{% endblock %}
+{% block content %}
+<div class="report">
+  <section class="card rise">
+    <span class="plate-chip plate-chip-lg">{{ plate }}</span>
+    <h1 class="car-title">We couldn't find that car</h1>
+    <p class="finding-detail">There's no MOT history for <strong>{{ plate }}</strong>. Check the plate for typos. Cars under three years old usually haven't had their first MOT yet.</p>
+    <p class="finding-detail">Live DVSA lookups are coming soon. For now, try a demo car:
+      <a href="{% url 'checker:report' 'SAMPLE1' %}">SAMPLE1</a>, <a href="{% url 'checker:report' 'SAMPLE2' %}">SAMPLE2</a> or <a href="{% url 'checker:report' 'SAMPLE3' %}">SAMPLE3</a>.</p>
+    <a class="btn-primary btn-block" href="{% url 'checker:home' %}">Check another car</a>
+  </section>
+</div>
+{% endblock %}

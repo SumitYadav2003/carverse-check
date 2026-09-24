@@ -61,3 +61,46 @@ class SampleVehicleTests(SimpleTestCase):
 
     def test_unknown_registration_returns_none(self):
         self.assertIsNone(load_sample("NOTREAL"))
+
+
+class PageTests(SimpleTestCase):
+    def test_home_page_loads(self):
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Know the car before you meet the seller.")
+
+    def test_plate_is_cleaned_and_redirected(self):
+        response = self.client.get("/check/", {"reg": " sample 3 "})
+        self.assertRedirects(response, "/report/SAMPLE3/", fetch_redirect_response=False)
+
+    def test_invalid_plate_shows_an_error(self):
+        response = self.client.get("/check/", {"reg": "!!!"})
+        self.assertEqual(response.status_code, 400)
+        self.assertContains(response, "doesn&#x27;t look like a UK number plate", status_code=400)
+
+    def test_report_shows_findings_and_links_evidence_to_the_timeline(self):
+        response = self.client.get("/report/SAMPLE3/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Dangerous defect recorded")
+        self.assertContains(response, 'href="#t-300000000106"')   # evidence chip...
+        self.assertContains(response, 'id="t-300000000106"')      # ...points at a real timeline row
+        self.assertContains(response, "Sample vehicle")
+
+    def test_clean_car_says_all_clear(self):
+        response = self.client.get("/report/SAMPLE1/")
+        self.assertContains(response, "No red flags in the MOT history.")
+        self.assertContains(response, "Pass · retest")
+
+    def test_mileage_drop_hides_average_and_draws_orange_segment(self):
+        response = self.client.get("/report/SAMPLE2/")
+        self.assertContains(response, "average not shown")
+        self.assertContains(response, 'class="seg-drop draw"')
+
+    def test_unknown_plate_is_a_friendly_404(self):
+        response = self.client.get("/report/NOTREAL/")
+        self.assertEqual(response.status_code, 404)
+        self.assertContains(response, "couldn't find that car", status_code=404)
+
+    def test_unreadable_reading_is_not_drawn_as_a_gap(self):
+        response = self.client.get("/report/SAMPLE3/")
+        self.assertEqual(response.content.decode().count('class="seg-gap"'), 1)   # only the 2021-2023 gap

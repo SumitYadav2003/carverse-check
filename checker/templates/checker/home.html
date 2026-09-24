@@ -1,0 +1,77 @@
+{% extends "checker/base.html" %}
+{% block body_class %}page-home{% endblock %}
+{% block topbar_left %}{% endblock %}
+{% block topbar_right %}<a class="topbar-link" href="#how">How it works</a>{% endblock %}
+{% block content %}
+<div class="home">
+  <section class="hero">
+    <p class="eyebrow rise" style="--d:.05s">USED-CAR CHECK · UK</p>
+    <h1 class="hero-title rise" style="--d:.12s">Know the car before you meet the seller.</h1>
+    <p class="hero-lead rise" style="--d:.2s">Type a number plate. We read the car's full official MOT history, spot what doesn't add up, and tell you exactly what to ask.</p>
+
+    <form class="plate-form rise" style="--d:.3s" action="{% url 'checker:check' %}" method="get" data-check-form novalidate>
+      <label class="plate-label" for="reg">Number plate</label>
+      <div class="plate-row">
+        <div class="plate">
+          <span class="plate-band" aria-hidden="true">UK</span>
+          <input class="plate-input" id="reg" name="reg" value="{{ value|default:'' }}" placeholder="AB12 CDE"
+                 autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="10" required
+                 aria-describedby="reg-hint{% if error %} reg-error{% endif %}"{% if error %} aria-invalid="true"{% endif %}>
+        </div>
+        <button class="btn-primary pulse" type="submit" data-check-button>
+          <span>Check this car</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+        </button>
+      </div>
+      {% if error %}<p class="field-error" id="reg-error" role="alert">{{ error }}</p>{% endif %}
+      <p class="plate-hint" id="reg-hint">Spaces don't matter. Try a demo car: <a href="{% url 'checker:report' 'SAMPLE1' %}">SAMPLE1</a>, <a href="{% url 'checker:report' 'SAMPLE2' %}">SAMPLE2</a> or <a href="{% url 'checker:report' 'SAMPLE3' %}">SAMPLE3</a>.</p>
+
+      <div class="progress" data-progress hidden aria-live="polite">
+        <div class="progress-step" data-step><span class="step-icon"></span><span>Getting the official MOT history</span></div>
+        <div class="progress-step" data-step><span class="step-icon"></span><span>Checking the mileage</span></div>
+        <div class="progress-step" data-step><span class="step-icon"></span><span>Looking for repeated warnings</span></div>
+      </div>
+    </form>
+
+    <div class="trust rise" style="--d:.4s">
+      <span class="trust-item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8DB8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>
+        Official DVSA MOT history
+      </span>
+      <span class="trust-dot" aria-hidden="true"></span>
+      <span class="trust-item">Every warning linked to the MOT test it came from</span>
+    </div>
+  </section>
+
+  <aside class="preview" aria-label="Example report">
+    <div class="preview-back rise" style="--d:.35s"></div>
+    <div class="preview-card rise" style="--d:.45s">
+      <div class="float">
+        <div class="preview-head">
+          <div><p class="preview-name">Vauxhall Corsa</p><p class="muted">2012 · Petrol · 8 MOTs on record</p></div>
+          <span class="plate-chip">SAMPLE3</span>
+        </div>
+        <div class="count-pair">
+          <div class="count count-serious"><span class="count-num">1</span><span>serious issue</span></div>
+          <div class="count count-ask"><span class="count-num">3</span><span>things to ask about</span></div>
+        </div>
+        <p class="muted small">Mileage at each MOT</p>
+        <svg viewBox="0 0 300 110" class="preview-chart" aria-hidden="true">
+          <line x1="0" y1="105" x2="300" y2="105" stroke="#2E322B"/>
+          <path class="draw" pathLength="1" d="M15,92 L55,76 L128,42 L165,26" fill="none" stroke="#F4C21B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M165,26 L245,19" fill="none" stroke="#F4C21B" stroke-width="2" stroke-dasharray="4 6" opacity=".6"/>
+          <path class="draw" pathLength="1" d="M245,19 L282,10" fill="none" stroke="#F4C21B" stroke-width="3" stroke-linecap="round" style="animation-delay:1.9s"/>
+          <text x="212" y="58" text-anchor="middle" font-size="10" fill="#A9A89F" font-family="IBM Plex Mono, monospace">28 months, no MOT</text>
+        </svg>
+        <div class="preview-finding"><span class="tag tag-serious">SERIOUS</span><span>Dangerous brake pipe corrosion recorded on 29 Sep 2023.</span></div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<section class="how" id="how" aria-label="How it works">
+  <div class="how-step rise" style="--d:.55s"><span class="how-num">01</span><div><p class="how-title">Enter the plate</p><p class="muted">From the advert, or the car in front of you.</p></div></div>
+  <div class="how-step rise" style="--d:.62s"><span class="how-num">02</span><div><p class="how-title">We check the history</p><p class="muted">Mileage, repeated warnings, dangerous defects and gaps.</p></div></div>
+  <div class="how-step rise" style="--d:.69s"><span class="how-num">03</span><div><p class="how-title">Ask the right questions</p><p class="muted">Know what to raise with the seller before you pay.</p></div></div>
+</section>
+{% endblock %}
