@@ -1,0 +1,22 @@
+{
+  "registration": "SAMPLE1",
+  "make": "FORD",
+  "model": "FIESTA",
+  "firstUsedDate": "2016-03-15",
+  "fuelType": "Petrol",
+  "primaryColour": "Blue",
+  "engineSize": "998",
+  "motTests": [
+    {"completedDate": "2025-03-04 10:12:40", "testResult": "PASSED", "expiryDate": "2026-03-14", "odometerValue": "73410", "odometerUnit": "MI", "odometerResultType": "READ", "motTestNumber": "100000000108", "dataSource": "dvsa",
+     "defects": [{"text": "Nearside front tyre worn close to legal limit/worn on edge (5.2.3 (e))", "type": "ADVISORY", "dangerous": false}]},
+    {"completedDate": "2024-02-28 14:30:11", "testResult": "PASSED", "expiryDate": "2025-03-14", "odometerValue": "66120", "odometerUnit": "MI", "odometerResultType": "READ", "motTestNumber": "100000000107", "dataSource": "dvsa", "defects": []},
+    {"completedDate": "2023-03-02 09:05:52", "testResult": "PASSED", "expiryDate": "2024-03-14", "odometerValue": "58905", "odometerUnit": "MI", "odometerResultType": "READ", "motTestNumber": "100000000106", "dataSource": "dvsa", "defects": []},
+    {"completedDate": "2022-03-08 16:44:03", "testResult": "PASSED", "expiryDate": "2023-03-14", "odometerValue": "51342", "odometerUnit": "MI", "odometerResultType": "READ", "motTestNumber": "100000000105", "dataSource": "dvsa", "defects": []},
+    {"completedDate": "2022-03-08 11:20:17", "testResult": "FAILED", "odometerValue": "51340", "odometerUnit": "MI", "odometerResultType": "READ", "motTestNumber": "100000000104", "dataSource": "dvsa",
+     "defects": [{"text": "Offside headlamp aim too high (4.1.2 (a) (i))", "type": "MAJOR", "dangerous": false}]},
+    {"completedDate": "2021-03-12 13:15:29", "testResult": "PASSED", "expiryDate": "2022-03-14", "odometerValue": "43980", "odometerUnit": "MI", "odometerResultType": "READ", "motTestNumber": "100000000103", "dataSource": "dvsa",
+     "defects": [{"text": "Front brake pad(s) wearing thin (1.1.13 (a) (ii))", "type": "ADVISORY", "dangerous": false}]},
+    {"completedDate": "2020-03-05 10:01:44", "testResult": "PASSED", "expiryDate": "2021-03-14", "odometerValue": "36210", "odometerUnit": "MI", "odometerResultType": "READ", "motTestNumber": "100000000102", "dataSource": "dvsa", "defects": []},
+    {"completedDate": "2019-03-10 15:22:08", "testResult": "PASSED", "expiryDate": "2020-03-14", "odometerValue": "28450", "odometerUnit": "MI", "odometerResultType": "READ", "motTestNumber": "100000000101", "dataSource": "dvsa", "defects": []}
+  ]
+}

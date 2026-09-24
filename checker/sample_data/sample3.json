@@ -1,0 +1,30 @@
+{
+  "registration": "SAMPLE3",
+  "make": "VAUXHALL",
+  "model": "CORSA",
+  "firstUsedDate": "2012-05-02",
+  "fuelType": "Petrol",
+  "primaryColour": "Red",
+  "engineSize": "1229",
+  "motTests": [
+    {"completedDate": "2024-09-18 15:12:06", "testResult": "PASSED", "expiryDate": "2025-09-30", "odometerValue": "98120", "odometerUnit": "MI", "odometerResultType": "READ", "motTestNumber": "300000000108", "dataSource": "dvsa",
+     "defects": [{"text": "Nearside rear brake pipe corroded, covered in grease or other material (1.1.11 (c))", "type": "ADVISORY", "dangerous": false}]},
+    {"completedDate": "2023-10-02 16:50:31", "testResult": "PASSED", "expiryDate": "2024-10-01", "odometerValue": "93410", "odometerUnit": "MI", "odometerResultType": "READ", "motTestNumber": "300000000107", "dataSource": "dvsa", "defects": []},
+    {"completedDate": "2023-09-29 10:25:48", "testResult": "FAILED", "odometerValue": "93405", "odometerUnit": "MI", "odometerResultType": "READ", "motTestNumber": "300000000106", "dataSource": "dvsa",
+     "defects": [
+       {"text": "Offside rear brake pipe excessively corroded (1.1.11 (a) (ii))", "type": "DANGEROUS", "dangerous": true},
+       {"text": "Nearside rear brake pipe corroded, covered in grease or other material (1.1.11 (c))", "type": "ADVISORY", "dangerous": false}
+     ]},
+    {"completedDate": "2021-05-20 12:14:09", "testResult": "PASSED", "expiryDate": "2022-05-19", "odometerValue": "89870", "odometerUnit": "MI", "odometerResultType": "READ", "motTestNumber": "300000000105", "dataSource": "dvsa",
+     "defects": [
+       {"text": "Offside rear brake pipe corroded, covered in grease or other material (1.1.11 (c))", "type": "ADVISORY", "dangerous": false},
+       {"text": "Nearside rear brake pipe corroded, covered in grease or other material (1.1.11 (c))", "type": "ADVISORY", "dangerous": false}
+     ]},
+    {"completedDate": "2020-05-14 09:40:22", "testResult": "PASSED", "expiryDate": "2021-05-19", "odometerValue": "81230", "odometerUnit": "MI", "odometerResultType": "READ", "motTestNumber": "300000000104", "dataSource": "dvsa",
+     "defects": [{"text": "Offside rear brake pipe corroded, covered in grease or other material (1.1.11 (c))", "type": "ADVISORY", "dangerous": false}]},
+    {"completedDate": "2019-05-08 14:55:37", "testResult": "PASSED", "expiryDate": "2020-05-19", "odometerValue": "12000", "odometerUnit": "MI", "odometerResultType": "UNREADABLE", "motTestNumber": "300000000103", "dataSource": "dvsa",
+     "defects": [{"text": "Offside rear brake pipe corroded, covered in grease or other material (1.1.11 (c))", "type": "ADVISORY", "dangerous": false}]},
+    {"completedDate": "2018-05-10 11:08:14", "testResult": "PASSED", "expiryDate": "2019-05-19", "odometerValue": "64020", "odometerUnit": "MI", "odometerResultType": "READ", "motTestNumber": "300000000102", "dataSource": "dvsa", "defects": []},
+    {"completedDate": "2017-05-04 10:30:59", "testResult": "PASSED", "expiryDate": "2018-05-19", "odometerValue": "55360", "odometerUnit": "MI", "odometerResultType": "READ", "motTestNumber": "300000000101", "dataSource": "dvsa", "defects": []}
+  ]
+}

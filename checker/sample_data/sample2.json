@@ -1,0 +1,20 @@
+{
+  "registration": "SAMPLE2",
+  "make": "VOLKSWAGEN",
+  "model": "GOLF",
+  "firstUsedDate": "2014-06-20",
+  "fuelType": "Diesel",
+  "primaryColour": "Silver",
+  "engineSize": "1968",
+  "motTests": [
+    {"completedDate": "2024-06-11 12:40:33", "testResult": "PASSED", "expiryDate": "2025-06-19", "odometerValue": "77260", "odometerUnit": "MI", "odometerResultType": "READ", "motTestNumber": "200000000108", "dataSource": "dvsa", "defects": []},
+    {"completedDate": "2023-06-14 09:18:45", "testResult": "PASSED", "expiryDate": "2024-06-19", "odometerValue": "69800", "odometerUnit": "MI", "odometerResultType": "READ", "motTestNumber": "200000000107", "dataSource": "dvsa", "defects": []},
+    {"completedDate": "2022-06-09 14:02:19", "testResult": "PASSED", "expiryDate": "2023-06-19", "odometerValue": "61250", "odometerUnit": "MI", "odometerResultType": "READ", "motTestNumber": "200000000106", "dataSource": "dvsa",
+     "defects": [{"text": "Oil leak, but not excessive (8.4.1 (a) (i))", "type": "ADVISORY", "dangerous": false}]},
+    {"completedDate": "2021-06-17 11:33:02", "testResult": "PASSED", "expiryDate": "2022-06-19", "odometerValue": "84300", "odometerUnit": "MI", "odometerResultType": "READ", "motTestNumber": "200000000105", "dataSource": "dvsa", "defects": []},
+    {"completedDate": "2020-06-15 10:47:55", "testResult": "PASSED", "expiryDate": "2021-06-19", "odometerValue": "71920", "odometerUnit": "MI", "odometerResultType": "READ", "motTestNumber": "200000000104", "dataSource": "dvsa", "defects": []},
+    {"completedDate": "2019-06-18 16:20:41", "testResult": "PASSED", "expiryDate": "2020-06-19", "odometerValue": "58730", "odometerUnit": "MI", "odometerResultType": "READ", "motTestNumber": "200000000103", "dataSource": "dvsa", "defects": []},
+    {"completedDate": "2018-06-12 13:09:27", "testResult": "PASSED", "expiryDate": "2019-06-19", "odometerValue": "45110", "odometerUnit": "MI", "odometerResultType": "READ", "motTestNumber": "200000000102", "dataSource": "dvsa", "defects": []},
+    {"completedDate": "2017-06-16 09:54:13", "testResult": "PASSED", "expiryDate": "2018-06-19", "odometerValue": "31980", "odometerUnit": "MI", "odometerResultType": "READ", "motTestNumber": "200000000101", "dataSource": "dvsa", "defects": []}
+  ]
+}
