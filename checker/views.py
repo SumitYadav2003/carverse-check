@@ -4,6 +4,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 
 from .analysis import build_report
+from .comparison import build_comparison
 from .presenters import present
 from .services import get_vehicle
 
@@ -33,5 +34,7 @@ def report(request, registration):
     vehicle, source = get_vehicle(plate)
     if vehicle is None:
         return render(request, "checker/not_found.html", {"plate": plate}, status=404)
-    context = present(build_report(vehicle), source)
+    report = build_report(vehicle)
+    context = present(report, source)
+    context["comparison"] = build_comparison(report["vehicle"])
     return render(request, "checker/report.html", context)

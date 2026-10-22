@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, TestCase
 
 from .analysis import build_report, normalise_defect_text, parse_datetime, mileage_in_miles
 from .sample_data import load_sample
@@ -63,7 +63,7 @@ class SampleVehicleTests(SimpleTestCase):
         self.assertIsNone(load_sample("NOTREAL"))
 
 
-class PageTests(SimpleTestCase):
+class PageTests(TestCase):   # the report page now reads the marts from the database
     def test_home_page_loads(self):
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)

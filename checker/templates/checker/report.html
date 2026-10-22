@@ -60,7 +60,9 @@
     </article>
     {% endfor %}
   </section>
+    {% include "checker/_comparison.html" %}
 
+  {% include "checker/_comparison.html" %}
   {% if chart %}
   <section class="card rise" style="--d:.5s" aria-labelledby="chart-h">
     <h2 id="chart-h" class="section-title">Mileage over time</h2>

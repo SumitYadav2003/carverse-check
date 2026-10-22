@@ -1,0 +1,47 @@
+{# "Compared with other cars like this", built from the dbt marts (see checker/comparison.py). #}
+{% if comparison and comparison.first_use_year %}
+<section class="card compare rise" style="--d:.46s" aria-labelledby="compare-h">
+  <h2 id="compare-h" class="section-title">Compared with other cars like this</h2>
+
+  {% if comparison.found %}
+  <p class="compare-lead">
+    {{ comparison.first_use_year }} {{ comparison.plural }} failed their {{ comparison.test_year }} MOT
+    <strong class="{% if comparison.worse %}is-worse{% endif %}">{{ comparison.verdict }}</strong>
+    other cars first used in {{ comparison.first_use_year }}.
+  </p>
+
+  <div class="compare-bars" role="img"
+       aria-label="Initial MOT failure rate: {{ comparison.rate }}% for {{ comparison.first_use_year }} {{ comparison.plural }}, {{ comparison.peer_rate }}% for all {{ comparison.first_use_year }} cars.">
+    <div class="compare-row">
+      <span class="compare-label">{{ comparison.first_use_year }} {{ comparison.name }}</span>
+      <div class="bar-track"><div class="bar bar-model" style="width: {{ comparison.rate }}%"></div></div>
+      <span class="compare-value">{{ comparison.rate }}%</span>
+    </div>
+    <div class="compare-row">
+      <span class="compare-label">All {{ comparison.first_use_year }} cars</span>
+      <div class="bar-track"><div class="bar bar-peer" style="width: {{ comparison.peer_rate }}%; animation-delay: .65s"></div></div>
+      <span class="compare-value">{{ comparison.peer_rate }}%</span>
+    </div>
+  </div>
+  <p class="muted small">Share failing their first MOT attempt in {{ comparison.test_year }}, from {{ comparison.tests }} tests of {{ comparison.first_use_year }} {{ comparison.plural }}.</p>
+
+  {% if comparison.categories %}
+  <h3 class="compare-sub">Where {{ comparison.first_use_year }} {{ comparison.plural }} most often failed</h3>
+  <ul class="compare-cats">
+    {% for c in comparison.categories %}
+    <li class="compare-cat">
+      <span class="compare-cat-name">{{ c.name }}{% if c.higher %} <span class="tag tag-ask">ABOVE AVERAGE</span>{% endif %}</span>
+      <span class="compare-cat-value"><strong>{{ c.share }}%</strong> of tests <span class="muted">vs {{ c.peer_share }}% for all {{ comparison.first_use_year }} cars</span></span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  <p class="muted small compare-note">This describes the model, not this car. Mileage and how a car has been looked after matter far more, so use it to decide what to check, not as a verdict.</p>
+  {% else %}
+  <p class="finding-detail">There weren't enough MOT tests of {{ comparison.first_use_year }} {{ comparison.plural }} to compare them fairly. We only show a comparison when a group has at least 100 tests.</p>
+  {% endif %}
+
+  <p class="muted small">Source: DVSA anonymised MOT test data. Contains public sector information licensed under the Open Government Licence v3.0.</p>
+</section>
+{% endif %}
