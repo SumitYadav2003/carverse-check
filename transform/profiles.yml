@@ -4,7 +4,8 @@ carverse:
   outputs:
     dev:
       type: duckdb
-      path: ../data/warehouse/mot.duckdb
+      # MOT_WAREHOUSE overrides this (CI uses its own small warehouse)
+      path: "{{ env_var('MOT_WAREHOUSE', '../data/warehouse/mot.duckdb') }}"
       threads: 4
       # Applied once, when the database is opened. temp_directory must live here: DuckDB
       # refuses to change it after it has spilled to disk, and anything under "settings"

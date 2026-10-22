@@ -22,6 +22,7 @@ Rules:
 """
 
 import hashlib
+import os
 import re
 import sys
 import time
@@ -33,7 +34,8 @@ try:
 except ImportError:
     sys.exit("DuckDB is missing. Run:  pip install duckdb")
 
-WAREHOUSE = Path("data/warehouse/mot.duckdb")
+# Set MOT_WAREHOUSE to use a different file, e.g. CI builds its own small warehouse
+WAREHOUSE = Path(os.environ.get("MOT_WAREHOUSE", "data/warehouse/mot.duckdb"))
 
 
 def target_table(path: Path) -> str:

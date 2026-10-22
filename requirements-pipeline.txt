@@ -1,0 +1,5 @@
+# The data pipeline (ingest, audits, dbt). Only needed where the pipeline runs:
+# your laptop and CI. Includes the website requirements so loading the marts works too.
+-r requirements.txt
+dbt-core==1.12.6
+dbt-duckdb==1.11.0

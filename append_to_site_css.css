@@ -1,0 +1,24 @@
+
+/* ---------- compared with other cars like this ---------- */
+.compare { display: flex; flex-direction: column; gap: 14px; }
+.compare .section-title { margin-bottom: 0; }
+.compare-lead { font-size: 16px; line-height: 1.55; color: var(--text-2); text-wrap: pretty; }
+.compare-lead strong { color: var(--text); }
+.compare-lead strong.is-worse { color: var(--serious); }
+.compare-bars { display: flex; flex-direction: column; gap: 10px; }
+.compare-row {
+  display: grid; grid-template-columns: 1fr auto; grid-template-areas: "label value" "bar bar";
+  gap: 6px 12px; align-items: center; font-size: 13px;
+}
+.compare-label { grid-area: label; }
+.compare-value { grid-area: value; font-family: var(--mono); }
+.compare-row .bar-track { grid-area: bar; height: 10px; border-radius: 5px; }
+.compare-row .bar { border-radius: 5px; }
+.bar-model { background: var(--plate); }
+.bar-peer { background: #6B6E66; }
+.compare-sub { font-size: 15px; font-weight: 600; margin-top: 6px; }
+.compare-cats { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.compare-cat { display: flex; flex-direction: column; gap: 2px; padding: 10px 0; border-bottom: 1px solid var(--surface-2); font-size: 14px; }
+.compare-cat:last-child { border-bottom: 0; }
+.compare-cat-name { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-weight: 600; }
+.compare-note { border-top: 1px solid var(--line); padding-top: 12px; }
