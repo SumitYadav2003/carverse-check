@@ -1,0 +1,30 @@
+name: carverse
+version: "1.0.0"
+config-version: 2
+profile: carverse
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+target-path: "target"
+clean-targets: ["target", "logs"]
+
+models:
+  carverse:
+    # staging: rename, type and filter only. Views, so nothing is stored twice.
+    staging:
+      +schema: staging
+      +materialized: view
+    # intermediate: the heavy de-duplication, built once and stored.
+    intermediate:
+      +schema: intermediate
+      +materialized: table
+    # marts: the star schema the app and analysis read.
+    marts:
+      +schema: marts
+      +materialized: table
+
+seeds:
+  carverse:
+    +schema: reference

@@ -1,0 +1,4 @@
+period_start,period_end,period_label,tests,initial_fail_rate_pct,final_fail_rate_pct
+2024-04-01,2024-06-30,2024-25 Q1 (Apr-Jun),7259696,27.89,22.46
+2024-07-01,2024-09-30,2024-25 Q2 (Jul-Sep),8651489,27.73,22.37
+2024-10-01,2024-12-31,2024-25 Q3 (Oct-Dec),8245954,28.89,23.33

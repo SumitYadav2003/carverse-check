@@ -1,0 +1,15 @@
+version: 2
+
+seeds:
+  - name: dvsa_published_fail_rates
+    description: >
+      DVSA's published MOT figures for classes 3 and 4 (normal tests, results P, F, PRS),
+      by financial-year quarter. Source: GOV.UK "MOT test results by class of vehicle"
+      (DVSA/MOT/01). Used to check this pipeline against the official statistics.
+    config:
+      column_types:
+        period_start: date
+        period_end: date
+        tests: bigint
+        initial_fail_rate_pct: double
+        final_fail_rate_pct: double

@@ -1,0 +1,16 @@
+# Run dbt from this folder:  dbt build --profiles-dir .
+carverse:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: ../data/warehouse/mot.duckdb
+      threads: 4
+      # Applied once, when the database is opened. temp_directory must live here: DuckDB
+      # refuses to change it after it has spilled to disk, and anything under "settings"
+      # is re-applied every time dbt opens a new cursor.
+      config_options:
+        temp_directory: ../data/warehouse/duckdb_tmp
+      # Re-applied on every cursor, which is fine for this one.
+      settings:
+        preserve_insertion_order: false

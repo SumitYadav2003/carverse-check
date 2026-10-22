@@ -1,0 +1,19 @@
+version: 2
+
+sources:
+  - name: raw
+    description: >
+      DVSA anonymised MOT test data, loaded untouched (every column as text) by
+      pipeline/ingest.py. Source: data.gov.uk "Anonymised MOT tests and results",
+      Open Government Licence v3.0.
+    schema: raw
+    tables:
+      - name: test_result
+        description: One line per test as published, including exact copies and repeated header lines.
+      - name: test_item
+        description: One line per defect on a test as published, including exact copies.
+      - name: item_detail
+      - name: item_group
+      - name: mdr_fuel_types
+      - name: mdr_test_outcome
+      - name: mdr_test_type

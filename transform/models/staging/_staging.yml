@@ -1,0 +1,46 @@
+version: 2
+
+models:
+  - name: stg_mot__test_results
+    description: Results files typed and with header lines removed. Still contains copies.
+    columns:
+      - name: test_id
+        data_tests: [not_null]
+      - name: test_date
+        data_tests: [not_null]
+
+  - name: stg_mot__test_items
+    description: Failure-item files typed and with header lines removed. Still contains copies.
+    columns:
+      - name: test_id
+        data_tests: [not_null]
+      - name: rfr_type_code
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['F', 'P', 'A', 'M']
+
+  - name: stg_mot__item_detail
+    columns:
+      - name: defect_key
+        data_tests: [unique, not_null]
+
+  - name: stg_mot__item_group
+    columns:
+      - name: item_group_key
+        data_tests: [unique, not_null]
+
+  - name: stg_mot__fuel_types
+    columns:
+      - name: fuel_type
+        data_tests: [unique, not_null]
+
+  - name: stg_mot__test_outcomes
+    columns:
+      - name: test_result
+        data_tests: [unique, not_null]
+
+  - name: stg_mot__test_types
+    columns:
+      - name: test_type
+        data_tests: [unique, not_null]

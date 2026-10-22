@@ -1,0 +1,64 @@
+version: 2
+
+models:
+  - name: fct_mot_tests
+    description: One row per MOT test, cleaned. The fact table for test-level analysis.
+    columns:
+      - name: test_id
+        data_tests: [unique, not_null]
+      - name: test_date
+        data_tests: [not_null]
+      - name: test_result
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_mot__test_outcomes')
+                field: test_result
+      - name: test_type
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_mot__test_types')
+                field: test_type
+      - name: vehicle_model_key
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_vehicle_model')
+                field: vehicle_model_key
+
+  - name: fct_test_defects
+    description: One row per distinct defect recorded on a test.
+    columns:
+      - name: test_defect_key
+        data_tests: [unique, not_null]
+      - name: test_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('fct_mot_tests')
+                field: test_id
+      - name: defect_key
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_defect')
+                field: defect_key
+      - name: rfr_type_code
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['F', 'P', 'A', 'M']
+
+  - name: dim_vehicle_model
+    columns:
+      - name: vehicle_model_key
+        data_tests: [unique, not_null]
+
+  - name: dim_defect
+    columns:
+      - name: defect_key
+        data_tests: [unique, not_null]
+      - name: defect_category
+        data_tests: [not_null]

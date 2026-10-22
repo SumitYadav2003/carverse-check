@@ -1,0 +1,12 @@
+version: 2
+
+models:
+  - name: int_test_results_deduped
+    description: >
+      One row per MOT test. Exact copies collapsed; any column the copies disagree on is
+      NULL and has_conflicting_copies is true.
+    columns:
+      - name: test_id
+        data_tests: [unique, not_null]
+      - name: published_copies
+        description: How many lines the test had in the published files (1 = no copies).
