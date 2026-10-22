@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from django.test import SimpleTestCase, TestCase
+from django.test import SimpleTestCase, TestCase, override_settings
 
 from .analysis import build_report, normalise_defect_text, parse_datetime, mileage_in_miles
 from .sample_data import load_sample
@@ -63,6 +63,8 @@ class SampleVehicleTests(SimpleTestCase):
         self.assertIsNone(load_sample("NOTREAL"))
 
 
+# Live DVSA lookups are switched off here: tests must never call the real API.
+@override_settings(DVSA_CLIENT_ID="")
 class PageTests(TestCase):   # the report page now reads the marts from the database
     def test_home_page_loads(self):
         response = self.client.get("/")

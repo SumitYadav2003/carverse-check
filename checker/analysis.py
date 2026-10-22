@@ -214,7 +214,9 @@ def build_report(vehicle):
             "fuel_type": vehicle.get("fuelType"),
             "colour": vehicle.get("primaryColour"),
             "engine_size": vehicle.get("engineSize"),
-            "first_used": parse_datetime(vehicle.get("firstUsedDate")),
+            # brand-new cars come back without firstUsedDate; registrationDate is the same idea
+            "first_used": parse_datetime(vehicle.get("firstUsedDate") or vehicle.get("registrationDate")),
+            "mot_due": parse_datetime(vehicle.get("motTestDueDate")),
         },
         "tests": tests,
         "summary": {

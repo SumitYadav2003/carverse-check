@@ -1,0 +1,13 @@
+{% extends "checker/base.html" %}
+{% block title %}DVSA isn't responding — Carverse Check{% endblock %}
+{% block content %}
+<div class="report">
+  <section class="card rise">
+    <span class="plate-chip plate-chip-lg">{{ plate }}</span>
+    <h1 class="car-title">We couldn't reach DVSA</h1>
+    <p class="finding-detail">The official MOT history service didn't answer just now. This is usually brief, so try again in a minute or two.</p>
+    <a class="btn-primary btn-block" href="{% url 'checker:report' plate %}">Try again</a>
+    <p class="finding-detail"><a href="{% url 'checker:home' %}">Check another car</a></p>
+  </section>
+</div>
+{% endblock %}

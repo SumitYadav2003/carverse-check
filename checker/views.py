@@ -6,6 +6,7 @@ from django.urls import reverse
 from .analysis import build_report
 from .comparison import build_comparison
 from .presenters import present
+from .dvsa import DvsaUnavailable
 from .services import get_vehicle
 
 PLATE_RE = re.compile(r"^[A-Z0-9]{1,8}$")
@@ -31,7 +32,12 @@ def check(request):
 
 def report(request, registration):
     plate = normalise_plate(registration)
-    vehicle, source = get_vehicle(plate)
+    if not PLATE_RE.match(plate):
+        return render(request, "checker/not_found.html", {"plate": plate[:10]}, status=404)
+    try:
+        vehicle, source = get_vehicle(plate)
+    except DvsaUnavailable:
+        return render(request, "checker/unavailable.html", {"plate": plate}, status=503)
     if vehicle is None:
         return render(request, "checker/not_found.html", {"plate": plate}, status=404)
     report = build_report(vehicle)

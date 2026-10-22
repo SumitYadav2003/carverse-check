@@ -13,6 +13,11 @@
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg>
     Sample vehicle — made-up data for this demo.
   </p>
+  {% elif is_live %}
+  <p class="sample-note live-note">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8DB8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>
+    Live data from the DVSA MOT history service.
+  </p>
   {% endif %}
 
   <section class="car rise">
@@ -53,16 +58,24 @@
       <div class="chips">{% for c in f.chips %}<a class="chip" href="#{{ c.anchor }}">{{ c.label }}</a>{% endfor %}</div>
     </article>
     {% empty %}
+    {% if not has_tests %}
+    <article class="card finding finding-clear rise">
+      <span class="tag tag-clear">NO MOT YET</span>
+      <h3 class="finding-title">This car hasn't had an MOT</h3>
+      <p class="finding-detail">Cars don't need one until they're three years old, so there's no history to check yet.{% if mot_due %} Its first MOT is due by {{ mot_due }}.{% endif %}</p>
+    </article>
+    {% else %}
     <article class="card finding finding-clear rise">
       <span class="tag tag-clear">ALL CLEAR</span>
       <h3 class="finding-title">Nothing stood out in the MOT history</h3>
       <p class="finding-detail">No mileage drops, dangerous defects, repeated warnings or long gaps between tests. It's still worth a test drive and an independent inspection.</p>
     </article>
+    {% endif %}
     {% endfor %}
   </section>
-    {% include "checker/_comparison.html" %}
 
   {% include "checker/_comparison.html" %}
+
   {% if chart %}
   <section class="card rise" style="--d:.5s" aria-labelledby="chart-h">
     <h2 id="chart-h" class="section-title">Mileage over time</h2>

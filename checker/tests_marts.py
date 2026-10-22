@@ -7,7 +7,7 @@ from pathlib import Path
 
 import duckdb
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from .comparison import build_comparison
 from .models import ModelYearDefectCategory, ModelYearFailRate
@@ -96,6 +96,7 @@ class ComparisonTests(TestCase):
         self.assertEqual(c["plural"], "BMW 3 Series cars")
 
 
+@override_settings(DVSA_CLIENT_ID="")
 class ReportComparisonPageTests(TestCase):
     def test_report_shows_comparison_when_group_exists(self):
         rate = make_rate()                         # SAMPLE1 is a 2016 Ford Fiesta
