@@ -10,6 +10,11 @@ macro-paths: ["macros"]
 target-path: "target"
 clean-targets: ["target", "logs"]
 
+vars:
+  # A make/model/first-use-year group needs at least this many initial tests before we
+  # publish a failure rate for it. Small groups give percentages that swing wildly.
+  min_tests_per_group: 100
+
 models:
   carverse:
     # staging: rename, type and filter only. Views, so nothing is stored twice.

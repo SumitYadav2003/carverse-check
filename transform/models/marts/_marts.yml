@@ -62,3 +62,33 @@ models:
         data_tests: [unique, not_null]
       - name: defect_category
         data_tests: [not_null]
+
+  - name: mart_model_year_fail_rates
+    description: >
+      Initial and final MOT failure rates for cars (class 4) by make, model and year of
+      first use, next to the rate for all cars first used in the same year. Only groups
+      with at least var('min_tests_per_group') initial tests.
+    columns:
+      - name: model_year_key
+        data_tests: [unique, not_null]
+      - name: vehicle_model_key
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_vehicle_model')
+                field: vehicle_model_key
+
+  - name: mart_model_year_defect_categories
+    description: >
+      Share of initial tests with at least one Fail/PRS item (and, separately, at least one
+      advisory) in each defect category, by make, model and year of first use, next to the
+      same-age average.
+    columns:
+      - name: model_year_category_key
+        data_tests: [unique, not_null]
+      - name: model_year_key
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('mart_model_year_fail_rates')
+                field: model_year_key
