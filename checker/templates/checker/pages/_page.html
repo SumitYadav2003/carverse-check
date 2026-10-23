@@ -1,0 +1,24 @@
+{% extends "checker/base.html" %}
+{# Layout for the content pages: a heading band, then an "On this page" list beside the text on wide screens. #}
+{% block body_class %}page-content{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <p class="eyebrow">{% block eyebrow %}{% endblock %}</p>
+    <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
+    <p class="page-lead">{% block lead %}{% endblock %}</p>
+    {% block updated %}{% endblock %}
+  </div>
+</div>
+<div class="container page-grid{% block grid_class %}{% endblock %}">
+  {% block toc_wrap %}
+  <nav class="page-toc" aria-label="On this page">
+    <p class="aside-head">On this page</p>
+    {% block toc %}{% endblock %}
+  </nav>
+  {% endblock %}
+  <article class="prose">
+    {% block body %}{% endblock %}
+  </article>
+</div>
+{% endblock %}

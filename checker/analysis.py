@@ -23,6 +23,7 @@ GAP_THRESHOLD_DAYS = 426  # roughly 14 months
 
 HIGH = "high"
 MEDIUM = "medium"
+MIN_DAYS_FOR_MILEAGE_RATE = 913   # 2.5 years: matches int_initial_car_tests in the dbt project
 INFO = "info"
 
 
@@ -199,9 +200,21 @@ def build_report(vehicle):
         + check_repeated_advisories(tests)
         + check_gaps_between_tests(tests)
     )
+    first_used = parse_datetime(vehicle.get("firstUsedDate") or vehicle.get("registrationDate"))
+
+    # Average miles a year since the car was first used: the same measure the dbt marts
+    # use for every car of this model and age, so the two can be compared. Only from 2.5
+    # years old (913 days), as in the marts.
+    miles_per_year_since_new = None
+    if readings and first_used:
+        days = (readings[-1]["date"] - first_used).days
+        if days >= MIN_DAYS_FOR_MILEAGE_RATE:
+            miles_per_year_since_new = round(readings[-1]["miles"] / (days / 365.25))
+
     # an average is meaningless if the readings themselves are inconsistent
     if any(f["code"] == "mileage_decrease" for f in findings):
         avg_miles_per_year = None
+        miles_per_year_since_new = None
 
     order = {HIGH: 0, MEDIUM: 1, INFO: 2}
     findings.sort(key=lambda f: order[f["severity"]])
@@ -215,7 +228,7 @@ def build_report(vehicle):
             "colour": vehicle.get("primaryColour"),
             "engine_size": vehicle.get("engineSize"),
             # brand-new cars come back without firstUsedDate; registrationDate is the same idea
-            "first_used": parse_datetime(vehicle.get("firstUsedDate") or vehicle.get("registrationDate")),
+            "first_used": first_used,
             "mot_due": parse_datetime(vehicle.get("motTestDueDate")),
         },
         "tests": tests,
@@ -224,6 +237,7 @@ def build_report(vehicle):
             "failed_count": sum(1 for t in tests if t["result"] == "FAILED"),
             "latest_miles": readings[-1]["miles"] if readings else None,
             "avg_miles_per_year": avg_miles_per_year,
+            "miles_per_year_since_new": miles_per_year_since_new,
         },
         "findings": findings,
     }

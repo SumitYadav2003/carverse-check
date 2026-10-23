@@ -10,3 +10,61 @@ models:
         data_tests: [unique, not_null]
       - name: published_copies
         description: How many lines the test had in the published files (1 = no copies).
+
+  - name: int_model_year_groups
+    description: >
+      Test and failure counts, and the spread of yearly mileage, for each make + model +
+      year of first use with at least var('min_tests_per_group') initial tests.
+    columns:
+      - name: tests
+        data_tests: [not_null]
+
+  - name: int_peer_year_spread
+    description: >
+      For each year of first use: the failure rate of all cars that age (the target) and
+      how much models of that age genuinely differ beyond chance (between_model_variance,
+      Spiegelhalter 2005 additive random effects with winsorised z-scores).
+    columns:
+      - name: first_use_year
+        data_tests: [unique, not_null]
+      - name: between_model_variance
+        data_tests: [not_null]
+
+unit_tests:
+  # The expected numbers were worked out separately in Python (numpy), not copied from
+  # dbt's output, so this checks the SQL against an independent calculation.
+  - name: peer_year_spread_matches_independent_calculation
+    model: int_peer_year_spread
+    overrides:
+      vars:
+        min_groups_for_spread: 10
+        spread_clip_quantile: 0.01
+    given:
+      - input: ref('int_initial_car_tests')
+        rows:
+          # 2015: 1 failure in 4 tests -> target 25%. 2016: 1 in 2 -> 50%.
+          - {first_use_year: 2015, is_initial_fail: true,  is_final_fail: true}
+          - {first_use_year: 2015, is_initial_fail: false, is_final_fail: false}
+          - {first_use_year: 2015, is_initial_fail: false, is_final_fail: false}
+          - {first_use_year: 2015, is_initial_fail: false, is_final_fail: false}
+          - {first_use_year: 2016, is_initial_fail: true,  is_final_fail: false}
+          - {first_use_year: 2016, is_initial_fail: false, is_final_fail: false}
+      - input: ref('int_model_year_groups')
+        rows:
+          - {first_use_year: 2015, tests: 100,  initial_fails: 20}
+          - {first_use_year: 2015, tests: 200,  initial_fails: 60}
+          - {first_use_year: 2015, tests: 50,   initial_fails: 10}
+          - {first_use_year: 2015, tests: 400,  initial_fails: 100}
+          - {first_use_year: 2015, tests: 80,   initial_fails: 30}
+          - {first_use_year: 2015, tests: 1000, initial_fails: 240}
+          - {first_use_year: 2015, tests: 300,  initial_fails: 90}
+          - {first_use_year: 2015, tests: 150,  initial_fails: 30}
+          - {first_use_year: 2015, tests: 60,   initial_fails: 21}
+          - {first_use_year: 2015, tests: 500,  initial_fails: 140}
+          # 2016 has only 2 groups: too few to estimate a spread, so it must be 0
+          - {first_use_year: 2016, tests: 100,  initial_fails: 50}
+          - {first_use_year: 2016, tests: 40,   initial_fails: 25}
+    expect:
+      rows:
+        - {first_use_year: 2015, model_groups: 10, overdispersion_ratio: 2.3133, between_model_variance: 0.0011613186}
+        - {first_use_year: 2016, model_groups: 2,  overdispersion_ratio: 1.2252, between_model_variance: 0}

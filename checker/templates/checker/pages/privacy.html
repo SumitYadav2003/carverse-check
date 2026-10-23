@@ -1,0 +1,69 @@
+{% extends "checker/pages/_page.html" %}
+{% block title %}Privacy notice: Carverse Check{% endblock %}
+{% block meta_description %}What personal data Carverse Check handles, why, for how long, and your rights.{% endblock %}
+{% block eyebrow %}PRIVACY NOTICE{% endblock %}
+{% block page_title %}Privacy notice{% endblock %}
+{% block lead %}The short version: no accounts, no cookies, no tracking, no adverts. The number plate you enter is sent to DVSA to fetch the history, kept in memory for up to an hour, and never saved to a database.{% endblock %}
+{% block updated %}<p class="page-updated">LAST UPDATED 23 OCTOBER 2026</p>{% endblock %}
+{% block toc %}
+<a href="#who">Who we are</a>
+<a href="#what">What we collect and why</a>
+<a href="#not">What we don't do</a>
+<a href="#sharing">Who else sees it</a>
+<a href="#keep">How long we keep it</a>
+<a href="#rights">Your rights</a>
+<a href="#changes">Changes</a>
+{% endblock %}
+{% block body %}
+<h2 id="who">Who we are</h2>
+<p>Carverse Check is run by Sumit Yadav, who is responsible for the personal data described here (the "controller" under UK data protection law). Contact: <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.</p>
+
+<h2 id="what">What we collect and why</h2>
+<h3>The number plates you check</h3>
+<p>When you check a car, its plate is sent to the DVSA MOT history service so we can show you its history. A number plate on its own doesn't identify you, but it can be linked to a car's keeper, so we treat it carefully:</p>
+<ul>
+  <li>DVSA's answer is kept in the server's memory for up to one hour, so opening the same report again is quick and we stay within DVSA's usage limits.</li>
+  <li>Plates are never written to our database.</li>
+  <li>The plate appears in the report's web address, so it also appears in server logs (below).</li>
+</ul>
+<p><strong>Why:</strong> to provide the check you asked for. Our lawful basis is legitimate interests: running a service you've chosen to use.</p>
+
+<h3>Server logs</h3>
+<p>Like almost every website, our hosting provider automatically records each request: your IP address, the time, the page requested (including any plate in the address) and your browser type.</p>
+<p><strong>Why:</strong> to keep the site secure, stop abuse and fix faults. Lawful basis: legitimate interests.</p>
+
+<h3>Emails you send us</h3>
+<p>If you email us, we receive your email address and whatever you write. We use it only to reply.</p>
+<p><strong>Why:</strong> to answer you. Lawful basis: legitimate interests.</p>
+
+<h2 id="not">What we don't do</h2>
+<ul>
+  <li>No accounts and no sign-in.</li>
+  <li>No cookies, so there's no cookie banner. Your browser stores nothing for this site.</li>
+  <li>No analytics, advertising or tracking scripts.</li>
+  <li>No third-party fonts or scripts: everything the pages load comes from this website.</li>
+  <li>We don't sell data or use it for marketing.</li>
+</ul>
+
+<h2 id="sharing">Who else sees it</h2>
+<ul>
+  <li><strong>DVSA</strong> receives the number plate you check, because that's how the MOT history is fetched. DVSA's own privacy notice covers what it does with requests.</li>
+  <li><strong>Our hosting provider</strong> runs the servers and keeps the server logs on our behalf. If it stores data outside the UK, it must do so with the safeguards UK data protection law requires.</li>
+</ul>
+<p>We'll share data with anyone else only if the law requires it.</p>
+
+<h2 id="keep">How long we keep it</h2>
+<ul>
+  <li>DVSA's answer for a plate: up to one hour, in memory only.</li>
+  <li>Server logs: for the period the hosting provider keeps them, typically a few weeks.</li>
+  <li>Emails: deleted within 12 months of the conversation ending.</li>
+</ul>
+
+<h2 id="rights">Your rights</h2>
+<p>Under UK data protection law you can ask to see the personal data we hold about you, have it corrected or deleted, object to how we use it, or ask us to restrict it. Email <a href="mailto:{{ contact_email }}">{{ contact_email }}</a> and we'll reply within one month.</p>
+<p>In practice we hold very little that can be linked to you: no accounts, and no plates in a database. Server logs are the main exception.</p>
+<p>If you're unhappy with how we've handled your data, you can complain to the Information Commissioner's Office at <a href="https://ico.org.uk/make-a-complaint/">ico.org.uk</a>. We'd appreciate the chance to put things right first.</p>
+
+<h2 id="changes">Changes to this notice</h2>
+<p>If we change what we collect or why, we'll update this page and the date at the top.</p>
+{% endblock %}

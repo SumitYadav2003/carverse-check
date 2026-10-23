@@ -11,6 +11,7 @@ select
     m.vehicle_model_key,
     t.fuel_type,
     t.cylinder_capacity,
+    t.first_use_date,
     t.first_use_year,
     year(t.test_date) - t.first_use_year as vehicle_age_years,
     t.postcode_area,

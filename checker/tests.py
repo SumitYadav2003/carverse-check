@@ -106,3 +106,66 @@ class PageTests(TestCase):   # the report page now reads the marts from the data
     def test_unreadable_reading_is_not_drawn_as_a_gap(self):
         response = self.client.get("/report/SAMPLE3/")
         self.assertEqual(response.content.decode().count('class="seg-gap"'), 1)   # only the 2021-2023 gap
+
+
+@override_settings(DVSA_CLIENT_ID="")
+class SitePageTests(TestCase):
+    """Every content page renders, is linked from the footer, and nothing sets a cookie
+    (the privacy notice promises no cookies)."""
+
+    PAGES = ["how_it_works", "methodology", "help", "about", "privacy", "terms",
+             "accessibility", "contact"]
+
+    def test_every_page_renders_with_header_and_footer(self):
+        from django.urls import reverse
+        home = self.client.get("/")
+        for name in self.PAGES:
+            url = reverse(f"checker:{name}")
+            with self.subTest(page=name):
+                response = self.client.get(url)
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, 'class="site-header"')
+                self.assertContains(response, "Open Government Licence v3.0")
+                self.assertContains(home, f'href="{url}"')          # reachable from every page
+
+    def test_current_page_is_marked_in_the_menu(self):
+        response = self.client.get("/methodology/")
+        self.assertContains(response, 'href="/methodology/" aria-current="page"')
+
+    def test_contact_email_is_shown(self):
+        self.assertContains(self.client.get("/contact/"), "culinaai.project@gmail.com")
+
+    def test_no_page_sets_a_cookie(self):
+        for url in ["/", "/report/SAMPLE1/", "/privacy/", "/methodology/", "/report/NOSUCHCAR/"]:
+            with self.subTest(url=url):
+                self.assertEqual(len(self.client.get(url).cookies), 0)
+
+    def test_reports_are_kept_out_of_search_engines(self):
+        self.assertContains(self.client.get("/report/SAMPLE1/"), '<meta name="robots" content="noindex">')
+        robots = self.client.get("/robots.txt")
+        self.assertEqual(robots["Content-Type"], "text/plain")
+        self.assertIn("Disallow: /report/", robots.content.decode())
+
+    def test_report_has_sidebar_actions(self):
+        response = self.client.get("/report/SAMPLE3/")
+        self.assertContains(response, "data-print")
+        self.assertContains(response, "data-copy-link")
+        self.assertContains(response, 'href="#history"')
+
+    @override_settings(DEBUG=False)
+    def test_unknown_address_uses_the_site_404_page(self):
+        response = self.client.get("/no-such-page/")
+        self.assertEqual(response.status_code, 404)
+        self.assertContains(response, "This page doesn't exist", status_code=404)
+
+    def test_methodology_shows_odometer_check_once_loaded(self):
+        from .models import OdometerRounding
+        self.assertContains(self.client.get("/methodology/"), "appear here once")
+        for digit in range(10):
+            OdometerRounding.objects.create(
+                check_key=f"last_digit-{digit}", check_name="last_digit", pattern=str(digit),
+                readings=1000 + (500 if digit == 0 else 0), total_readings=10500,
+                share_pct=(1500 if digit == 0 else 1000) / 105, expected_share_pct=10.0)
+        response = self.client.get("/methodology/")
+        self.assertContains(response, "10,500 MOT odometer readings")
+        self.assertContains(response, "digit-bar is-over")                # 0 is over-represented

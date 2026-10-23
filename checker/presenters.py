@@ -31,10 +31,10 @@ def evidence_chips(finding):
 
 def verdict(serious, ask):
     if serious:
-        return "Go carefully — check the serious issue first." if serious == 1 else \
-               f"Go carefully — check the {serious} serious issues first."
+        return "Go carefully: check the serious issue first." if serious == 1 else \
+               f"Go carefully: check the {serious} serious issues first."
     if ask:
-        return "Mostly fine — a few things to ask about."
+        return "Mostly fine, with a few things to ask about."
     return "No red flags in the MOT history."
 
 
@@ -155,4 +155,7 @@ def present(report, source):
         },
         "chart": mileage_chart(report["tests"]),
         "timeline": timeline(report["tests"]),
+        "last_test": ({"date": fmt_day(report["tests"][-1]["date"]),
+                       "passed": report["tests"][-1]["result"] == "PASSED"}
+                      if report["tests"] else None),
     }

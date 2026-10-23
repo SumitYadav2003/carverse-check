@@ -1,26 +1,86 @@
 {% load static %}<!doctype html>
-<html lang="en">
+<html lang="en-GB" class="no-js">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <script>document.documentElement.className = "js";</script>
+  <title>{% block title %}Carverse Check: free used-car MOT history check{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}Check a UK car's official MOT history before you buy: mileage problems, repeated warnings and dangerous defects, explained in plain English, and compared with similar cars.{% endblock %}">
+  {% block robots %}{% endblock %}
   <meta name="theme-color" content="#111210">
-  <title>{% block title %}Carverse Check — used-car MOT history check{% endblock %}</title>
-  <meta name="description" content="Check a UK car's official MOT history before you buy: mileage problems, repeated warnings and dangerous defects, explained in plain English.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Barlow+Condensed:wght@700&display=swap" rel="stylesheet">
+  <link rel="icon" href="{% static 'checker/img/favicon.svg' %}" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="{% static 'checker/img/apple-touch-icon.png' %}">
+  {# link previews on WhatsApp, LinkedIn and so on #}
+  <meta property="og:site_name" content="Carverse Check">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{% block og_title %}Carverse Check: know the car before you meet the seller{% endblock %}">
+  <meta property="og:description" content="Free UK used-car check built on the official DVSA MOT history.">
+  <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'checker/img/og-image.png' %}">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preload" href="{% static 'checker/fonts/ibm-plex-sans-latin-400-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{% static 'checker/fonts/bricolage-grotesque-latin-wght-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{% static 'checker/css/site.css' %}">
 </head>
 <body class="{% block body_class %}{% endblock %}">
   <a class="skip" href="#main">Skip to content</a>
-  <header class="topbar">
-    {% block topbar_left %}<span class="topbar-spacer"></span>{% endblock %}
-    <a class="wordmark" href="{% url 'checker:home' %}" aria-label="Carverse Check home">
-      <span class="wordmark-name">Carverse</span><span class="wordmark-tag">CHECK</span>
-    </a>
-    {% block topbar_right %}<span class="topbar-spacer"></span>{% endblock %}
+
+  {% with page=request.resolver_match.url_name %}
+  <header class="site-header" data-header>
+    <div class="container header-inner">
+      <a class="wordmark" href="{% url 'checker:home' %}" aria-label="Carverse Check home">
+        <span class="wordmark-name">Carverse</span><span class="wordmark-tag">CHECK</span>
+      </a>
+      <nav class="site-nav" id="site-nav" aria-label="Main">
+        <a href="{% url 'checker:how_it_works' %}"{% if page == 'how_it_works' %} aria-current="page"{% endif %}>How it works</a>
+        <a href="{% url 'checker:methodology' %}"{% if page == 'methodology' %} aria-current="page"{% endif %}>Methodology</a>
+        <a href="{% url 'checker:help' %}"{% if page == 'help' %} aria-current="page"{% endif %}>Help</a>
+        <a href="{% url 'checker:about' %}"{% if page == 'about' %} aria-current="page"{% endif %}>About</a>
+        {% if page != 'home' %}<a class="nav-cta" href="{% url 'checker:home' %}#reg">Check a car</a>{% endif %}
+      </nav>
+      <button class="menu-btn" type="button" aria-expanded="false" aria-controls="site-nav" data-menu-button>
+        <span class="visually-hidden">Menu</span>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path class="menu-open" d="M4 7h16M4 12h16M4 17h16"/><path class="menu-close" d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
   </header>
-  <main id="main">{% block content %}{% endblock %}</main>
+  {% endwith %}
+
+  <main id="main" tabindex="-1">{% block content %}{% endblock %}</main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <a class="wordmark" href="{% url 'checker:home' %}" aria-label="Carverse Check home">
+          <span class="wordmark-name">Carverse</span><span class="wordmark-tag">CHECK</span>
+        </a>
+        <p>A free check of a UK car's official MOT history, built as an independent project. Not affiliated with or endorsed by DVSA.</p>
+      </div>
+      <nav class="footer-col" aria-label="Product">
+        <p class="footer-head">Product</p>
+        <a href="{% url 'checker:home' %}">Check a car</a>
+        <a href="{% url 'checker:how_it_works' %}">How it works</a>
+        <a href="{% url 'checker:methodology' %}">Methodology</a>
+        <a href="{% url 'checker:report' 'SAMPLE3' %}">Example report</a>
+      </nav>
+      <nav class="footer-col" aria-label="Support">
+        <p class="footer-head">Support</p>
+        <a href="{% url 'checker:help' %}">Help and FAQs</a>
+        <a href="{% url 'checker:contact' %}">Contact</a>
+        <a href="{% url 'checker:accessibility' %}">Accessibility</a>
+      </nav>
+      <nav class="footer-col" aria-label="Legal">
+        <p class="footer-head">Legal</p>
+        <a href="{% url 'checker:privacy' %}">Privacy notice</a>
+        <a href="{% url 'checker:terms' %}">Terms of use</a>
+        <a href="{% url 'checker:about' %}">About</a>
+      </nav>
+    </div>
+    <div class="container footer-bottom">
+      <p>© {% now "Y" %} Sumit Yadav</p>
+      <p>MOT data from DVSA. Contains public sector information licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">Open Government Licence v3.0</a>.</p>
+    </div>
+  </footer>
+
   <script src="{% static 'checker/js/site.js' %}" defer></script>
 </body>
 </html>

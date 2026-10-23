@@ -1,6 +1,6 @@
 {# "Compared with other cars like this", built from the dbt marts (see checker/comparison.py). #}
 {% if comparison and comparison.first_use_year %}
-<section class="card compare rise" style="--d:.46s" aria-labelledby="compare-h">
+<section class="card compare rise" id="compare" style="--d:.46s" aria-labelledby="compare-h">
   <h2 id="compare-h" class="section-title">Compared with other cars like this</h2>
 
   {% if comparison.found %}
@@ -8,13 +8,17 @@
     {{ comparison.first_use_year }} {{ comparison.plural }} failed their {{ comparison.test_year }} MOT
     <strong class="{% if comparison.worse %}is-worse{% endif %}">{{ comparison.verdict }}</strong>
     other cars first used in {{ comparison.first_use_year }}.
+    <span class="compare-why">{{ comparison.verdict_note }}</span>
   </p>
 
   <div class="compare-bars" role="img"
-       aria-label="Initial MOT failure rate: {{ comparison.rate }}% for {{ comparison.first_use_year }} {{ comparison.plural }}, {{ comparison.peer_rate }}% for all {{ comparison.first_use_year }} cars.">
+       aria-label="Initial MOT failure rate: {{ comparison.rate }}% for {{ comparison.first_use_year }} {{ comparison.plural }}, likely between {{ comparison.low }}% and {{ comparison.high }}%; {{ comparison.peer_rate }}% for all {{ comparison.first_use_year }} cars.">
     <div class="compare-row">
       <span class="compare-label">{{ comparison.first_use_year }} {{ comparison.name }}</span>
-      <div class="bar-track"><div class="bar bar-model" style="width: {{ comparison.rate }}%"></div></div>
+      <div class="bar-track bar-track-range">
+        <div class="bar bar-model" style="width: {{ comparison.rate }}%"></div>
+        <span class="bar-range" style="left: {{ comparison.low }}%; width: calc({{ comparison.high }}% - {{ comparison.low }}%)"></span>
+      </div>
       <span class="compare-value">{{ comparison.rate }}%</span>
     </div>
     <div class="compare-row">
@@ -23,7 +27,50 @@
       <span class="compare-value">{{ comparison.peer_rate }}%</span>
     </div>
   </div>
-  <p class="muted small">Share failing their first MOT attempt in {{ comparison.test_year }}, from {{ comparison.tests }} tests of {{ comparison.first_use_year }} {{ comparison.plural }}.</p>
+  <p class="muted small">
+    Share failing their first MOT attempt in {{ comparison.test_year }}, from {{ comparison.tests }} tests of {{ comparison.first_use_year }} {{ comparison.plural }}.
+    The thin line marks the likely range ({{ comparison.low }}% to {{ comparison.high }}%).
+  </p>
+  {% if comparison.small_group %}
+  <p class="compare-caution small">
+    With only {{ comparison.tests }} tests, the true rate could be anywhere from {{ comparison.low }}% to {{ comparison.high }}%.
+    Allowing for that, our best estimate is <strong>{{ comparison.estimate }}%</strong>
+    (likely {{ comparison.estimate_low }}% to {{ comparison.estimate_high }}%), against {{ comparison.peer_rate }}% for all {{ comparison.first_use_year }} cars.
+  </p>
+  {% endif %}
+
+  {% with f=comparison.funnel %}{% if f %}
+  <figure class="funnel">
+    <svg viewBox="0 0 {{ f.width }} {{ f.height }}" role="img" aria-labelledby="funnel-t funnel-d">
+      <title id="funnel-t">Failure rates of {{ f.models }} models first used in {{ comparison.first_use_year }}</title>
+      <desc id="funnel-d">Each dot is one model. The further right, the more tests behind it. {{ f.outside }} of {{ f.models }} models sit outside the inner lines. The {{ comparison.name }} is highlighted.</desc>
+      {% for t in f.y_ticks %}
+      <line class="funnel-grid" x1="{{ f.plot.left }}" x2="{{ f.plot.right }}" y1="{{ t.y }}" y2="{{ t.y }}"/>
+      <text class="funnel-axis" x="{{ f.plot.left|add:'-6' }}" y="{{ t.y }}" text-anchor="end" dominant-baseline="middle">{{ t.label }}</text>
+      {% endfor %}
+      {% for t in f.x_ticks %}
+      <text class="funnel-axis" x="{{ t.x }}" y="{{ f.plot.bottom|add:'16' }}" text-anchor="middle">{{ t.label }}</text>
+      {% endfor %}
+      <text class="funnel-axis" x="{{ f.plot.right }}" y="{{ f.plot.bottom|add:'34' }}" text-anchor="end">MOT tests behind each dot →</text>
+      <path class="funnel-line funnel-outer" d="{{ f.outer.0 }}"/>
+      <path class="funnel-line funnel-outer" d="{{ f.outer.1 }}"/>
+      <path class="funnel-line funnel-inner" d="{{ f.inner.0 }}"/>
+      <path class="funnel-line funnel-inner" d="{{ f.inner.1 }}"/>
+      <line class="funnel-peer" x1="{{ f.plot.left }}" x2="{{ f.plot.right }}" y1="{{ f.peer_y }}" y2="{{ f.peer_y }}"/>
+      <g class="funnel-dots">
+        {% for p in f.points %}<circle cx="{{ p.x }}" cy="{{ p.y }}" r="2.2"{% if p.out %} class="out"{% endif %}/>{% endfor %}
+      </g>
+      <circle class="funnel-this" cx="{{ f.this.x }}" cy="{{ f.this.y }}" r="6"/>
+    </svg>
+    <figcaption class="muted small">
+      Every model first used in {{ comparison.first_use_year }}: its failure rate against how many tests it had.
+      Models with few tests scatter widely by chance, so the lines fan out to the left.
+      Dots outside the <span class="key-inner">inner lines</span> stand out from other models of this age, even allowing for chance and the usual differences between models;
+      the <span class="key-outer">outer lines</span> are a stricter test.
+      The <span class="key-this">yellow dot</span> is the {{ comparison.name }}; the <span class="key-peer">dashed line</span> is all {{ comparison.first_use_year }} cars ({{ comparison.peer_rate }}%).
+    </figcaption>
+  </figure>
+  {% endif %}{% endwith %}
 
   {% if comparison.categories %}
   <h3 class="compare-sub">Where {{ comparison.first_use_year }} {{ comparison.plural }} most often failed</h3>
@@ -37,9 +84,22 @@
   </ul>
   {% endif %}
 
+  {% with m=comparison.mileage %}{% if m %}
+  <h3 class="compare-sub">This car's mileage</h3>
+  <p class="compare-mileage-lead"><strong>{{ m.miles }} miles a year</strong> on average since it was first used. {{ m.text }}</p>
+  <div class="mileage-strip" role="img"
+       aria-label="This car: {{ m.miles }} miles a year. Middle half of {{ comparison.first_use_year }} {{ comparison.plural }}: {{ m.typical_low }} to {{ m.typical_high }} miles a year.">
+    <span class="mileage-outer" style="left: {{ m.pos.p10 }}%; width: {{ m.widths.outer }}%"></span>
+    <span class="mileage-inner" style="left: {{ m.pos.p25 }}%; width: {{ m.widths.inner }}%"></span>
+    <span class="mileage-median" style="left: {{ m.pos.p50 }}%"></span>
+    <span class="mileage-car mileage-{{ m.band }}" style="left: {{ m.pos.car }}%"></span>
+  </div>
+  <p class="muted small">The darker band is the middle half of {{ comparison.first_use_year }} {{ comparison.plural }} ({{ m.typical_low }} to {{ m.typical_high }} miles a year); the lighter band covers 8 in 10. From {{ m.readings }} MOT readings.</p>
+  {% endif %}{% endwith %}
+
   <p class="muted small compare-note">This describes the model, not this car. Mileage and how a car has been looked after matter far more, so use it to decide what to check, not as a verdict.</p>
   {% else %}
-  <p class="finding-detail">There weren't enough MOT tests of {{ comparison.first_use_year }} {{ comparison.plural }} to compare them fairly. We only show a comparison when a group has at least 100 tests.</p>
+  <p class="finding-detail">There weren't enough MOT tests of {{ comparison.first_use_year }} {{ comparison.plural }} to compare them fairly.</p>
   {% endif %}
 
   <p class="muted small">Source: DVSA anonymised MOT test data. Contains public sector information licensed under the Open Government Licence v3.0.</p>

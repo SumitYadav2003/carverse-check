@@ -1,17 +1,17 @@
 {% extends "checker/base.html" %}
-{% block title %}{{ vehicle.make|title }} {{ vehicle.model|title }} ({{ vehicle.registration }}) — Carverse Check{% endblock %}
+{% block title %}{{ vehicle.make|title }} {{ vehicle.model|title }} ({{ vehicle.registration }}): MOT history report, Carverse Check{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
 {% block body_class %}page-report{% endblock %}
-{% block topbar_left %}
-<a class="icon-btn" href="{% url 'checker:home' %}" aria-label="Back to search">
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m11 18-6-6 6-6"/></svg>
-</a>
-{% endblock %}
 {% block content %}
-<div class="report">
+<div class="container report-page">
+  <a class="back-link" href="{% url 'checker:home' %}">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m11 18-6-6 6-6"/></svg>
+    New check
+  </a>
   {% if is_sample %}
   <p class="sample-note">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg>
-    Sample vehicle — made-up data for this demo.
+    Sample vehicle: made-up data for this demo.
   </p>
   {% elif is_live %}
   <p class="sample-note live-note">
@@ -30,6 +30,8 @@
     </div>
   </section>
 
+  <div class="report-grid">
+  <div class="report-main">
   <section class="card verdict rise" style="--d:.08s">
     <p class="kicker {% if serious_count %}kicker-serious{% elif ask_count %}kicker-ask{% else %}kicker-clear{% endif %}">VERDICT</p>
     <p class="verdict-text">{{ verdict }}</p>
@@ -43,12 +45,12 @@
 
   <section class="stats rise" style="--d:.14s" aria-label="Key numbers">
     <div class="stat"><span class="stat-num">{{ stats.latest_miles|default:"—" }}</span><span class="muted">miles at last MOT</span></div>
-    <div class="stat"><span class="stat-num">{{ stats.avg_miles|default:"—" }}</span><span class="muted">{% if stats.avg_miles %}miles a year on average{% else %}average not shown — readings don't add up{% endif %}</span></div>
+    <div class="stat"><span class="stat-num">{{ stats.avg_miles|default:"—" }}</span><span class="muted">{% if stats.avg_miles %}miles a year on average{% else %}average not shown, as the readings don't add up{% endif %}</span></div>
     <div class="stat"><span class="stat-num">{{ stats.test_count }}</span><span class="muted">MOT{{ stats.test_count|pluralize }} on record</span></div>
     <div class="stat"><span class="stat-num">{{ stats.failed_count }}</span><span class="muted">failed MOT{{ stats.failed_count|pluralize }}</span></div>
   </section>
 
-  <section class="findings" aria-labelledby="found-h">
+  <section class="findings" id="found" aria-labelledby="found-h">
     <h2 id="found-h" class="section-title">What we found</h2>
     {% for f in findings %}
     <article class="card finding {% if f.serious %}finding-serious{% else %}finding-ask{% endif %} rise" style="--d:{{ f.delay_ms }}ms">
@@ -77,7 +79,7 @@
   {% include "checker/_comparison.html" %}
 
   {% if chart %}
-  <section class="card rise" style="--d:.5s" aria-labelledby="chart-h">
+  <section class="card rise" id="mileage" style="--d:.5s" aria-labelledby="chart-h">
     <h2 id="chart-h" class="section-title">Mileage over time</h2>
     <svg class="chart" viewBox="0 0 {{ chart.width }} {{ chart.height }}" role="img" aria-label="{{ chart.description }}">
       <line x1="{{ chart.left }}" y1="{{ chart.baseline }}" x2="{{ chart.right }}" y2="{{ chart.baseline }}" stroke="#2E322B"/>
@@ -101,7 +103,7 @@
   </section>
   {% endif %}
 
-  <section class="history rise" style="--d:.56s" aria-labelledby="hist-h">
+  <section class="history rise" id="history" style="--d:.56s" aria-labelledby="hist-h">
     <h2 id="hist-h" class="section-title">Full MOT history</h2>
     <ol class="timeline">
       {% for row in timeline %}
@@ -117,9 +119,46 @@
     </ol>
   </section>
 
-  <footer class="report-foot">
-    <p>Source: DVSA MOT history. MOT records can't show accident damage, outstanding finance or service history — check those separately.</p>
-    <a href="{% url 'checker:home' %}">Check another car</a>
-  </footer>
+  <div class="report-foot">
+    <p>Source: DVSA MOT history. MOT records can't show accident damage, outstanding finance or service history, so check those separately.</p>
+  </div>
+  </div>{# /report-main #}
+
+  <aside class="report-aside" aria-label="Report summary and actions">
+    <div class="aside-card aside-glance">
+      <p class="aside-head">At a glance</p>
+      <dl class="glance">
+        <div><dt>Plate</dt><dd><span class="plate-chip">{{ vehicle.registration }}</span></dd></div>
+        {% if first_used %}<div><dt>First used</dt><dd>{{ first_used }}</dd></div>{% endif %}
+        {% if vehicle.fuel_type %}<div><dt>Fuel</dt><dd>{{ vehicle.fuel_type|title }}</dd></div>{% endif %}
+        {% if last_test %}<div><dt>Last MOT</dt><dd>{{ last_test.date }} · <span class="{% if last_test.passed %}is-pass{% else %}is-fail{% endif %}">{% if last_test.passed %}Pass{% else %}Fail{% endif %}</span></dd></div>{% endif %}
+        {% if mot_due %}<div><dt>MOT due</dt><dd>{{ mot_due }}</dd></div>{% endif %}
+        {% if stats.latest_miles %}<div><dt>Mileage</dt><dd>{{ stats.latest_miles }}</dd></div>{% endif %}
+      </dl>
+    </div>
+
+    <nav class="aside-card toc" aria-label="On this page">
+      <p class="aside-head">On this page</p>
+      <a href="#found" data-toc>What we found</a>
+      {% if comparison and comparison.first_use_year %}<a href="#compare" data-toc>Compared with similar cars</a>{% endif %}
+      {% if chart %}<a href="#mileage" data-toc>Mileage over time</a>{% endif %}
+      <a href="#history" data-toc>Full MOT history</a>
+    </nav>
+
+    <div class="aside-card aside-actions">
+      <p class="aside-head">Take it with you</p>
+      <button class="btn-secondary" type="button" data-print>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg>
+        Print or save as PDF
+      </button>
+      <button class="btn-secondary" type="button" data-copy-link>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>
+        <span data-copy-label>Copy link to this report</span>
+      </button>
+      <a class="btn-primary btn-block" href="{% url 'checker:home' %}#reg">Check another car</a>
+      <p class="muted small">{% if is_sample %}Sample data, made up for this demo.{% elif is_live %}Live from the DVSA MOT history service.{% endif %} <a href="{% url 'checker:how_it_works' %}">How to read this report</a></p>
+    </div>
+  </aside>
+  </div>{# /report-grid #}
 </div>
 {% endblock %}

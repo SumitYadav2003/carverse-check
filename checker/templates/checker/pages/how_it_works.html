@@ -1,0 +1,69 @@
+{% extends "checker/pages/_page.html" %}
+{% block title %}How it works: Carverse Check{% endblock %}
+{% block meta_description %}What each check in a Carverse Check report looks for, how to read the comparison with similar cars, and what an MOT history can't tell you.{% endblock %}
+{% block eyebrow %}HOW IT WORKS{% endblock %}
+{% block page_title %}What the report checks, and how to read it{% endblock %}
+{% block lead %}Every report starts from the car's official MOT history. Here's what we look for in it, what each finding means, and where the limits are.{% endblock %}
+{% block toc %}
+<a href="#checks">The four checks</a>
+<a href="#verdict">The verdict</a>
+<a href="#compare">Comparison with similar cars</a>
+<a href="#mileage">Mileage against similar cars</a>
+<a href="#limits">What it can't tell you</a>
+{% endblock %}
+{% block body %}
+<h2 id="checks">The four checks</h2>
+<p>When you enter a number plate, we fetch the car's MOT history from DVSA and run four checks on it. Every finding lists the MOT tests it's based on, and you can jump to them in the full history at the bottom of the report.</p>
+
+<h3>Mileage that went down <span class="tag tag-serious">SERIOUS</span></h3>
+<p>We compare each odometer reading with the one before it. If a reading is lower, we flag it. That can be an honest mistake at the test centre or a replaced instrument cluster, but it can also mean the mileage was wound back ("clocking"). Ask the seller to explain it, ideally with paperwork. Readings the tester marked as unreadable are left out rather than counted as zero.</p>
+
+<h3>Dangerous defects <span class="tag tag-serious">SERIOUS</span></h3>
+<p>Since May 2018, testers grade each problem as minor, major or dangerous. Anything graded dangerous is flagged, with the date. A dangerous defect has to be fixed before the car can be driven, so ask for proof of the repair.</p>
+
+<h3>The same warning at more than one MOT <span class="tag tag-ask">ASK ABOUT</span></h3>
+<p>Advisories are things the tester noticed that didn't fail the car, such as tyres close to the legal limit. When the same advisory appears at two or more MOTs, it was probably never fixed. We match advisories on their wording, ignoring the MOT manual reference number at the end.</p>
+
+<h3>Long gaps with no MOT <span class="tag tag-ask">ASK ABOUT</span></h3>
+<p>If more than about 14 months pass between two tests, we flag the gap. The car may have been declared off the road (SORN), stored, or driven without a valid MOT. It's worth asking which.</p>
+
+<h2 id="verdict">The verdict</h2>
+<p>The verdict at the top of the report sums up the findings:</p>
+<ul>
+  <li><strong>Go carefully</strong> if there's at least one serious finding.</li>
+  <li><strong>Mostly fine</strong> if there are only things to ask about.</li>
+  <li><strong>No red flags</strong> if none of the checks found anything.</li>
+</ul>
+<p>"No red flags" means the MOT history looks consistent. It doesn't mean the car is in good condition today, so a test drive and an independent inspection are still worth it.</p>
+
+<h2 id="compare">Comparison with similar cars</h2>
+<p>This section shows how often cars of the same make, model and year of first use failed their first MOT attempt in 2024, next to the rate for all cars first used that year. Age is the biggest single influence on MOT failure, which is why we compare like with like.</p>
+<p>Some models have hundreds of thousands of tests behind them. Others have a few dozen, and a few dozen tests can give a misleading rate by chance. So the report shows three things:</p>
+<ul>
+  <li><strong>A likely range.</strong> The thin line under the bar shows where the true failure rate probably lies, given how many tests there were.</li>
+  <li><strong>A best estimate for small groups.</strong> With fewer than 100 tests, we also show an adjusted figure that allows for the small sample.</li>
+  <li><strong>A careful verdict.</strong> We only say a model fails "more often" or "less often" when the difference is clear from the data and at least one percentage point.</li>
+</ul>
+<p>The chart underneath (a funnel plot) shows every model of the same age. It answers a slightly different question: does this model stand out from other models? A popular model can fail a little more often than average and still be well within the normal range. The <a href="{% url 'checker:methodology' %}#statistics">methodology</a> explains the statistics.</p>
+<p class="callout">These figures describe a model, not the car you're looking at. How a car has been driven and maintained matters far more than its badge.</p>
+
+<h2 id="mileage">Mileage against similar cars</h2>
+<p>We work out the car's average miles a year since it was first used, then place it among other cars of the same model and age:</p>
+<ul>
+  <li><strong>Lower than 9 in 10</strong> similar cars: genuinely low mileage is good news, but ask for paperwork that backs it up.</li>
+  <li><strong>Lower than most</strong> or <strong>higher than most</strong>: outside the middle half.</li>
+  <li><strong>Typical</strong>: within the middle half.</li>
+  <li><strong>Higher than 9 in 10</strong>: more miles usually means more wear, so the service history matters more.</li>
+</ul>
+<p>We don't show this when the mileage readings went down at some point, because the average wouldn't mean anything.</p>
+
+<h2 id="limits">What it can't tell you</h2>
+<p>An MOT is a safety check on the day of the test. The MOT history can't show:</p>
+<ul>
+  <li>whether there's outstanding finance on the car</li>
+  <li>whether it has been written off by an insurer</li>
+  <li>whether it's stolen, or its plates have been changed to hide its past</li>
+  <li>its service history or how many owners it has had</li>
+</ul>
+<p>Check the V5C logbook against the car and the seller, ask for service records, and consider a paid vehicle history check for finance and write-off records.</p>
+{% endblock %}

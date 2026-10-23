@@ -1,0 +1,106 @@
+{% extends "checker/pages/_page.html" %}
+{% block title %}Help and FAQs: Carverse Check{% endblock %}
+{% block meta_description %}Answers to common questions about Carverse Check: finding a car, reading the report, MOT terms explained, and how your searches are handled.{% endblock %}
+{% block eyebrow %}HELP{% endblock %}
+{% block page_title %}Help and frequently asked questions{% endblock %}
+{% block lead %}Can't find your answer here? <a href="{% url 'checker:contact' %}">Get in touch</a>.{% endblock %}
+{% block toc %}
+<a href="#using">Using the checker</a>
+<a href="#reading">Reading the report</a>
+<a href="#terms">MOT terms explained</a>
+<a href="#data">Data and privacy</a>
+{% endblock %}
+{% block body %}
+<h2 id="using">Using the checker</h2>
+<div class="faq">
+  <details>
+    <summary>How do I check a car?</summary>
+    <p>Type the number plate on the <a href="{% url 'checker:home' %}">home page</a> and press "Check this car". Spaces and capital letters don't matter. The report usually opens in a second or two.</p>
+  </details>
+  <details>
+    <summary>Is it free? Do I need an account?</summary>
+    <p>It's free and there's no account. Nothing to sign up for, and nothing to pay.</p>
+  </details>
+  <details>
+    <summary>Can I check a car I don't own?</summary>
+    <p>Yes. MOT history is public information, published by DVSA so that buyers can check a car before they buy it. The history doesn't include anything about the owner.</p>
+  </details>
+  <details>
+    <summary>Why can't you find the car?</summary>
+    <p>The most common reason is a typo, so check the plate letter by letter (0 and O, 1 and I are easy to mix up). If the car has had a private plate added or removed recently, try the plate shown on its V5C logbook.</p>
+    <p>A car that's newer than three years usually hasn't had an MOT yet. If DVSA knows the car but it has no tests, the report says so and shows when its first MOT is due.</p>
+  </details>
+  <details>
+    <summary>It says DVSA isn't responding. What should I do?</summary>
+    <p>The DVSA MOT history service sometimes takes a short break or gets busy. Wait a minute or two and press "Try again". If it keeps happening, please <a href="{% url 'checker:contact' %}">let me know</a>.</p>
+  </details>
+  <details>
+    <summary>Can I save or share a report?</summary>
+    <p>On a computer, use "Print or save as PDF" or "Copy link" beside the report. On a phone, they're at the bottom of the report. A link opens the latest version of the report, not a frozen copy.</p>
+  </details>
+</div>
+
+<h2 id="reading">Reading the report</h2>
+<div class="faq">
+  <details>
+    <summary>The report says "No red flags". Is the car safe to buy?</summary>
+    <p>It means the MOT history looks consistent: no mileage drops, dangerous defects, repeated warnings or long gaps. It can't tell you the car's condition today, or anything about finance, write-offs or theft. A test drive and an independent inspection are still worth it.</p>
+  </details>
+  <details>
+    <summary>Why is the average mileage missing?</summary>
+    <p>We hide averages when the recorded mileage went down at some point, because the readings don't add up and an average would be misleading. The finding about the drop explains what to ask.</p>
+  </details>
+  <details>
+    <summary>Why isn't there a comparison with similar cars?</summary>
+    <p>We need at least 30 MOT tests of the same make, model and year of first use to compare fairly. Rarer models don't reach that. Sometimes a model is recorded under a slightly different name in DVSA's data, so it can't be matched.</p>
+  </details>
+  <details>
+    <summary>What does "not clearly more or less often" mean?</summary>
+    <p>There weren't enough tests to tell whether the difference from other cars of the same age is real or down to chance. The likely range shows how uncertain the figure is.</p>
+  </details>
+  <details>
+    <summary>Does a model's failure rate tell me about this car?</summary>
+    <p>Only a little. It shows what tends to go wrong with that model at that age, which is useful for knowing what to look at. How this car was driven and maintained matters much more.</p>
+  </details>
+</div>
+
+<h2 id="terms">MOT terms explained</h2>
+<div class="faq">
+  <details>
+    <summary>Advisory</summary>
+    <p>Something the tester noticed that doesn't fail the car yet but may need attention soon, such as a tyre close to the legal limit.</p>
+  </details>
+  <details>
+    <summary>Minor, major and dangerous</summary>
+    <p>Since 20 May 2018, defects are graded. Minor defects don't fail the car. Major defects fail it and must be repaired. Dangerous defects fail it too, and the car shouldn't be driven until it's repaired.</p>
+  </details>
+  <details>
+    <summary>PRS (pass after rectification)</summary>
+    <p>The car failed, but the problems were fixed at the test centre within an hour of the test, and it then passed. It still counts as a failure in DVSA's statistics, and in ours.</p>
+  </details>
+  <details>
+    <summary>Retest</summary>
+    <p>A second test after a failure, once repairs have been done.</p>
+  </details>
+  <details>
+    <summary>SORN</summary>
+    <p>A Statutory Off Road Notification: the keeper has told DVLA the car is off the road, so it doesn't need an MOT or tax. It's a common, innocent explanation for a gap between MOTs.</p>
+  </details>
+</div>
+
+<h2 id="data">Data and privacy</h2>
+<div class="faq">
+  <details>
+    <summary>How up to date is the information?</summary>
+    <p>The car's MOT history comes live from DVSA, kept for up to an hour so repeat visits are quick. The comparisons with similar cars use every MOT test from 2024.</p>
+  </details>
+  <details>
+    <summary>Do you keep the plates I search?</summary>
+    <p>We don't save them in a database. A plate is kept in memory for up to an hour, and the hosting provider's logs record the pages visited for a limited time. The <a href="{% url 'checker:privacy' %}">privacy notice</a> explains everything we do with data.</p>
+  </details>
+  <details>
+    <summary>I think something in an MOT record is wrong</summary>
+    <p>We show the record exactly as DVSA holds it, so we can't correct it. Contact the test centre that carried out the test, which can ask DVSA to correct it. If you think we've misread the record, please <a href="{% url 'checker:contact' %}">tell me</a>.</p>
+  </details>
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "checker/base.html" %}
+{% block title %}Page not found: Carverse Check{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block content %}
+<div class="container narrow">
+  <section class="card">
+    <p class="eyebrow">ERROR 404</p>
+    <h1 class="car-title">This page doesn't exist</h1>
+    <p class="finding-detail">The link may be broken, or the page may have moved. If you typed the address, check it for typos.</p>
+    <a class="btn-primary btn-block" href="{% url 'checker:home' %}">Check a car</a>
+    <p class="finding-detail"><a href="{% url 'checker:help' %}">Help and FAQs</a></p>
+  </section>
+</div>
+{% endblock %}

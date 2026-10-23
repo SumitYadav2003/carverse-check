@@ -1,4 +1,83 @@
 // Carverse Check — progressive enhancement only: the site works without JavaScript.
+
+// ---------- site header: menu button on small screens ----------
+(function () {
+  "use strict";
+  var header = document.querySelector("[data-header]");
+  var button = document.querySelector("[data-menu-button]");
+  if (!header || !button) return;
+
+  function setOpen(open) {
+    header.classList.toggle("is-open", open);
+    button.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+  button.addEventListener("click", function () {
+    setOpen(!header.classList.contains("is-open"));
+  });
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && header.classList.contains("is-open")) {
+      setOpen(false);
+      button.focus();
+    }
+  });
+  // close when a link inside it is followed (same-page anchors)
+  header.addEventListener("click", function (event) {
+    if (event.target.closest("#site-nav a")) setOpen(false);
+  });
+})();
+
+// ---------- report: print, copy link, "on this page" highlighting ----------
+(function () {
+  "use strict";
+  var printButton = document.querySelector("[data-print]");
+  if (printButton) printButton.addEventListener("click", function () { window.print(); });
+
+  var copyButton = document.querySelector("[data-copy-link]");
+  if (copyButton) {
+    var label = copyButton.querySelector("[data-copy-label]");
+    var original = label.textContent;
+    copyButton.addEventListener("click", function () {
+      var url = window.location.href.split("#")[0];
+      function done(text) {
+        label.textContent = text;
+        copyButton.classList.add("is-done");
+        setTimeout(function () {
+          label.textContent = original;
+          copyButton.classList.remove("is-done");
+        }, 2400);
+      }
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(url).then(function () { done("Link copied"); },
+                                                function () { done("Couldn't copy: use the address bar"); });
+      } else {
+        done("Copy the address from your browser's address bar");
+      }
+    });
+    copyButton.setAttribute("aria-live", "polite");
+  }
+
+  var links = Array.prototype.slice.call(document.querySelectorAll("[data-toc]"));
+  if (!links.length || !("IntersectionObserver" in window)) return;
+  var byId = {};
+  links.forEach(function (a) { byId[a.getAttribute("href").slice(1)] = a; });
+  var visible = {};
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { visible[e.target.id] = e.isIntersecting; });
+    // highlight the first section (in page order) that is on screen
+    var current = null;
+    links.forEach(function (a) {
+      var id = a.getAttribute("href").slice(1);
+      if (!current && visible[id]) current = id;
+    });
+    links.forEach(function (a) { a.classList.toggle("is-current", a === byId[current]); });
+  }, { rootMargin: "-80px 0px -45% 0px" });
+  Object.keys(byId).forEach(function (id) {
+    var section = document.getElementById(id);
+    if (section) observer.observe(section);
+  });
+})();
+
+// ---------- home: the number plate form ----------
 (function () {
   "use strict";
 

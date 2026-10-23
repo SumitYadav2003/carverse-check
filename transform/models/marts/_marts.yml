@@ -67,10 +67,23 @@ models:
     description: >
       Initial and final MOT failure rates for cars (class 4) by make, model and year of
       first use, next to the rate for all cars first used in the same year. Only groups
-      with at least var('min_tests_per_group') initial tests.
+      with at least var('min_tests_per_group') initial tests. Each rate has a 95% range
+      (Wilson), an adjusted estimate with its own range (empirical Bayes) and funnel
+      limits (Spiegelhalter). vs_peers is the verdict shown to buyers; funnel_position says
+      whether the model stands out from other models of the same age.
     columns:
       - name: model_year_key
         data_tests: [unique, not_null]
+      - name: vs_peers
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['higher', 'lower', 'within']
+      - name: funnel_position
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['above', 'below', 'inside']
       - name: vehicle_model_key
         data_tests:
           - relationships:
@@ -92,3 +105,11 @@ models:
               arguments:
                 to: ref('mart_model_year_fail_rates')
                 field: model_year_key
+
+  - name: mart_odometer_rounding
+    description: >
+      Data-quality check on odometer readings: share of readings by last digit, and ending
+      in 00 or 000, next to the share expected if readings were never rounded.
+    columns:
+      - name: check_key
+        data_tests: [unique, not_null]

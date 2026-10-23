@@ -1,0 +1,29 @@
+{% extends "checker/pages/_page.html" %}
+{% block title %}Contact: Carverse Check{% endblock %}
+{% block meta_description %}How to get in touch about Carverse Check.{% endblock %}
+{% block eyebrow %}CONTACT{% endblock %}
+{% block page_title %}Get in touch{% endblock %}
+{% block lead %}Questions, bugs, ideas or a mistake in a report: I read every message.{% endblock %}
+{% block grid_class %} no-toc{% endblock %}
+{% block toc_wrap %}{% endblock %}
+{% block body %}
+<div class="contact-card">
+  <p class="aside-head">Email</p>
+  <a class="contact-email" href="mailto:{{ contact_email }}">{{ contact_email }}</a>
+  <p class="muted">Carverse Check is run by one person, so replies can take a few working days.</p>
+</div>
+
+<h2>Helpful things to include</h2>
+<ul>
+  <li>The address of the page you were on (copy it from your browser).</li>
+  <li>What you expected to happen, and what happened instead.</li>
+  <li>For a report that looks wrong, the number plate and which finding you mean.</li>
+</ul>
+
+<h2>Before you write</h2>
+<ul>
+  <li><strong>A mistake in an MOT record</strong> (a wrong mileage, say) has to be corrected by the test centre that did the test, through DVSA. We show records as DVSA holds them.</li>
+  <li><strong>A question about a particular car</strong> is best asked of the seller. The <a href="{% url 'checker:how_it_works' %}">How it works</a> page explains what each finding means.</li>
+  <li>Many questions are answered in <a href="{% url 'checker:help' %}">Help and FAQs</a>.</li>
+</ul>
+{% endblock %}

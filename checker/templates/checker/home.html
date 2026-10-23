@@ -1,9 +1,7 @@
 {% extends "checker/base.html" %}
 {% block body_class %}page-home{% endblock %}
-{% block topbar_left %}{% endblock %}
-{% block topbar_right %}<a class="topbar-link" href="#how">How it works</a>{% endblock %}
 {% block content %}
-<div class="home">
+<div class="container home">
   <section class="hero">
     <p class="eyebrow rise" style="--d:.05s">USED-CAR CHECK · UK</p>
     <h1 class="hero-title rise" style="--d:.12s">Know the car before you meet the seller.</h1>
@@ -61,7 +59,7 @@
           <path class="draw" pathLength="1" d="M15,92 L55,76 L128,42 L165,26" fill="none" stroke="#F4C21B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
           <path d="M165,26 L245,19" fill="none" stroke="#F4C21B" stroke-width="2" stroke-dasharray="4 6" opacity=".6"/>
           <path class="draw" pathLength="1" d="M245,19 L282,10" fill="none" stroke="#F4C21B" stroke-width="3" stroke-linecap="round" style="animation-delay:1.9s"/>
-          <text x="212" y="58" text-anchor="middle" font-size="10" fill="#A9A89F" font-family="IBM Plex Mono, monospace">28 months, no MOT</text>
+          <text x="205" y="44" text-anchor="middle" font-size="10" fill="#A9A89F" font-family="IBM Plex Mono, monospace">28 months, no MOT</text>
         </svg>
         <div class="preview-finding"><span class="tag tag-serious">SERIOUS</span><span>Dangerous brake pipe corrosion recorded on 29 Sep 2023.</span></div>
       </div>
@@ -69,9 +67,5 @@
   </aside>
 </div>
 
-<section class="how" id="how" aria-label="How it works">
-  <div class="how-step rise" style="--d:.55s"><span class="how-num">01</span><div><p class="how-title">Enter the plate</p><p class="muted">From the advert, or the car in front of you.</p></div></div>
-  <div class="how-step rise" style="--d:.62s"><span class="how-num">02</span><div><p class="how-title">We check the history</p><p class="muted">Mileage, repeated warnings, dangerous defects and gaps.</p></div></div>
-  <div class="how-step rise" style="--d:.69s"><span class="how-num">03</span><div><p class="how-title">Ask the right questions</p><p class="muted">Know what to raise with the seller before you pay.</p></div></div>
-</section>
+{% include 'checker/_home_sections.html' %}
 {% endblock %}

@@ -1,0 +1,129 @@
+{% extends "checker/pages/_page.html" %}
+{% block title %}Methodology: Carverse Check{% endblock %}
+{% block meta_description %}How Carverse Check turns DVSA's anonymised MOT data into fair comparisons: the data pipeline, the cleaning rules, the check against DVSA's published figures and the statistics.{% endblock %}
+{% block eyebrow %}METHODOLOGY{% endblock %}
+{% block page_title %}From 42 million MOT tests to one fair comparison{% endblock %}
+{% block lead %}How the comparison figures in each report are made, how they're checked, and where they fall short. Written for anyone who wants to know whether to trust them.{% endblock %}
+{% block updated %}<p class="page-updated">DATA: DVSA ANONYMISED MOT TESTS, 2024</p>{% endblock %}
+{% block toc %}
+<a href="#sources">Two sources of data</a>
+<a href="#pipeline">The pipeline</a>
+<a href="#cleaning">Cleaning the data</a>
+<a href="#reconciliation">Checking against DVSA</a>
+<a href="#statistics">The statistics</a>
+<a href="#odometer">Odometer rounding check</a>
+<a href="#testing">Testing</a>
+<a href="#limitations">Limitations</a>
+<a href="#references">References</a>
+{% endblock %}
+{% block body %}
+<h2 id="sources">Two sources of data</h2>
+<p><strong>The car's own history</strong> comes live from the DVSA MOT history service each time you check a plate. It's stored in memory for up to an hour so repeat visits are quick.</p>
+<p><strong>The comparisons</strong> come from DVSA's anonymised MOT data: one record for every MOT test carried out in Great Britain in 2024, with the vehicle's make, model, first-use date and mileage, and every defect recorded. It has no number plates, so it can't be linked back to a particular car.</p>
+
+<h2 id="pipeline">The pipeline</h2>
+<p>The anonymised files are processed on the author's computer, and only the small summary tables are copied to the website.</p>
+<ol class="pipeline">
+  <li><strong>Load.</strong> Every file is loaded into DuckDB exactly as published, as text, with a fingerprint (SHA-256) of each file. Re-running skips files already loaded, and a file DVSA republishes with changes is reloaded in full.</li>
+  <li><strong>Clean and model.</strong> dbt models clean and type the data, remove duplicates and build a star schema: one fact table of tests ({{ facts.tests }} rows), one of defects ({{ facts.defects }} rows), and dimensions for vehicle models and defect types.</li>
+  <li><strong>Summarise.</strong> Mart tables work out failure rates, defect categories and mileage spreads for each make, model and year of first use, with the statistics described below.</li>
+  <li><strong>Test.</strong> dbt data tests and unit tests run on every build. If one fails, the figures don't reach the website.</li>
+  <li><strong>Publish.</strong> The marts are copied into the website's database in a single transaction, so the site never shows a half-loaded state.</li>
+</ol>
+<p>A small set of made-up data in the same format, with the same quirks, runs through the whole pipeline on every code change (GitHub Actions).</p>
+
+<h2 id="cleaning">Cleaning the data</h2>
+<p>The published files needed more work than their user guide suggests. What we found, and the rule applied to each:</p>
+<ul>
+  <li><strong>Repeated header lines</strong> inside the data. Removed.</li>
+  <li><strong>Exact copies.</strong> About 35% of test result rows are exact copies of another row. Copies are collapsed into one test.</li>
+  <li><strong>Copies that disagree.</strong> 829,687 tests have copies that differ, mostly in vehicle details. Where copies disagree about a value, that value is treated as unknown rather than guessed, and the test is flagged. The year of first use is kept whenever the copies agree on it.</li>
+  <li><strong>Repeated defects.</strong> Each distinct defect is counted once per test.</li>
+  <li><strong>Awkward text.</strong> A few values contain commas or escaped quote marks, which break naive file reading. The file format is set explicitly, and any line that still can't be read is set aside and counted, with a limit of 0.1% per file.</li>
+</ul>
+
+<h2 id="reconciliation">Checking against DVSA's published figures</h2>
+<p>DVSA publishes its own MOT statistics. If the cleaning were wrong, our totals wouldn't match. For cars and light vans (classes 3 and 4), April to December 2024:</p>
+<div class="table-wrap">
+<table class="data-table">
+  <thead><tr><th>Measure</th><th class="num">Ours</th><th class="num">DVSA</th></tr></thead>
+  <tbody>
+    <tr><td>Initial tests</td><td class="num">{{ facts.dvsa_tests_ours }}</td><td class="num">{{ facts.dvsa_tests_theirs }}</td></tr>
+    <tr><td>Initial failure rate</td><td class="num">{{ facts.dvsa_initial_ours }}</td><td class="num">{{ facts.dvsa_initial_theirs }}</td></tr>
+    <tr><td>Final failure rate</td><td class="num">{{ facts.dvsa_final_ours }}</td><td class="num">{{ facts.dvsa_final_theirs }}</td></tr>
+  </tbody>
+</table>
+</div>
+<p>The test count is within 0.1% and both rates within 0.01 percentage points. A dbt test repeats this check for each quarter on every build, and fails if the count is more than 1% out or a rate more than 0.2 points out.</p>
+
+<h2 id="statistics">The statistics</h2>
+<h3>Like-for-like groups</h3>
+<p>Each group is one make, model and year of first use, using initial tests of class 4 vehicles (cars and light vans), as in DVSA's own statistics. A group needs at least 30 tests to appear. Defect categories need at least 100, because they split a group into smaller pieces.</p>
+
+<h3>A likely range for every rate</h3>
+<p>Each failure rate comes with a 95% range, the Wilson score interval (Wilson, 1927). Unlike the textbook "plus or minus" formula, it stays between 0% and 100% and behaves well for small groups.</p>
+
+<h3>Adjusted estimates for small groups</h3>
+<p>A group with 30 tests can show a failure rate 10 points away from its true value just by chance. The adjusted estimate uses empirical Bayes, an approach going back to Efron and Morris (1975): each group's rate is pulled towards the rate for all cars of its age, strongly when it has few tests and hardly at all when it has many. How strongly depends on how much models of that age genuinely differ, which is measured from the data (see below).</p>
+
+<h3>When we say "more often" or "less often"</h3>
+<p>A model is only described as failing more or less often than its peers when the whole 95% range of its adjusted estimate is on one side of the peer rate, and the gap is at least one percentage point. Smaller gaps can be real but are too small to matter when you're buying a car.</p>
+
+<h3>Funnel plots</h3>
+<p>The chart in each report is a funnel plot (Spiegelhalter, 2005), the kind used to compare hospital outcomes. It shows every model of the same age, with limits that are wide for small models and narrow for big ones. Following Spiegelhalter's additive random-effects method, the limits allow for chance and for the normal spread between models, so a dot outside them genuinely stands out.</p>
+<p>That method first clips extreme scores before measuring the spread, normally at the 10th and 90th percentiles. In simulations where the true spread was known, that halved the measured spread when every model genuinely differs, which would make far too many models look unusual. Clipping at the 1st and 99th percentiles stayed within about 10% of the truth, with and without extreme models, so that's what we use. The simulation is in the code (<code>pipeline/check_spread_estimator.py</code>) for anyone to re-run.</p>
+
+<h2 id="odometer">Odometer rounding check</h2>
+<p>Montag (2017) adapted the "last-digit test", first used to look for fraud in election results, to find suspicious mileages in used-car adverts. The idea: in genuine readings, the last digit is equally likely to be anything from 0 to 9. If far more readings end in 0, some were rounded or estimated rather than read.</p>
+{% if digits %}
+<p>Here is the same test on {{ total_readings }} MOT odometer readings from 2024:</p>
+<div class="table-wrap">
+<table class="data-table">
+  <caption>Share of readings by last digit (10% expected for each)</caption>
+  <thead><tr><th>Last digit</th><th class="num">Readings</th><th class="num">Share</th><th>Compared with 10%</th></tr></thead>
+  <tbody>
+    {% for d in digits %}
+    <tr>
+      <td>{{ d.pattern }}</td>
+      <td class="num">{{ d.readings_text }}</td>
+      <td class="num">{{ d.share_pct|floatformat:2 }}%</td>
+      <td style="min-width:140px"><span class="digit-bar{% if d.diff > 0.5 %} is-over{% endif %}" style="width: {{ d.bar }}%" aria-hidden="true"></span></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% if ends_00 and ends_000 %}
+<p>Readings ending in 00: <strong>{{ ends_00.share_pct|floatformat:2 }}%</strong> (1% expected). Ending in 000: <strong>{{ ends_000.share_pct|floatformat:2 }}%</strong> (0.1% expected).</p>
+{% endif %}
+<p class="callout">This describes the data as a whole, never one car. One car has far too few readings for the test, and rounding is often innocent, for example when a tester notes an approximate reading.</p>
+{% else %}
+<p class="callout">The results of this check appear here once the latest data has been loaded.</p>
+{% endif %}
+
+<h2 id="testing">Testing</h2>
+<ul>
+  <li><strong>Data tests</strong> check every build: unique keys, valid relationships between tables, allowed values, and rules that must always hold, such as every range containing its own rate.</li>
+  <li><strong>A dbt unit test</strong> checks the spread calculation against figures worked out separately in Python.</li>
+  <li><strong>The DVSA reconciliation test</strong> described above.</li>
+  <li><strong>Website tests</strong> cover the checks, the comparison wording, the DVSA connection (without calling DVSA) and every page.</li>
+</ul>
+
+<h2 id="limitations">Limitations</h2>
+<ul>
+  <li>Comparisons use one year of tests (2024). A model's figures can change from year to year.</li>
+  <li>Groups are matched on make and model as DVSA records them. Different spellings of the same model end up in different groups, and a car whose model is recorded differently won't find its group.</li>
+  <li>Mileages are assumed to be in miles. The anonymised data doesn't record the unit.</li>
+  <li>MOT failure measures a car's condition on the day of the test. It isn't the same as reliability, and owners of some models may maintain them better than others.</li>
+</ul>
+
+<h2 id="references">References</h2>
+<ul>
+  <li>Efron, B. and Morris, C. (1975). Data analysis using Stein's estimator and its generalizations. <em>Journal of the American Statistical Association</em>, 70(350), 311–319.</li>
+  <li>Montag, J. (2017). Identifying odometer fraud in used car market data. <em>Transport Policy</em>, 60, 10–23.</li>
+  <li>Spiegelhalter, D. J. (2005). Funnel plots for comparing institutional performance. <em>Statistics in Medicine</em>, 24(8), 1185–1202.</li>
+  <li>Spiegelhalter, D. J. (2005). Handling over-dispersion of performance indicators. <em>Quality and Safety in Health Care</em>, 14(5), 347–351.</li>
+  <li>Wilson, E. B. (1927). Probable inference, the law of succession, and statistical inference. <em>Journal of the American Statistical Association</em>, 22(158), 209–212.</li>
+  <li>Driver and Vehicle Standards Agency. Anonymised MOT tests and results. Open Government Licence v3.0.</li>
+</ul>
+{% endblock %}

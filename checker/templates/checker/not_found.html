@@ -1,7 +1,8 @@
 {% extends "checker/base.html" %}
-{% block title %}No record found — Carverse Check{% endblock %}
+{% block title %}No record found: Carverse Check{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
 {% block content %}
-<div class="report">
+<div class="container narrow">
   <section class="card rise">
     <span class="plate-chip plate-chip-lg">{{ plate }}</span>
     <h1 class="car-title">We couldn't find that car</h1>

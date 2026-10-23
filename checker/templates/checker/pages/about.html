@@ -1,0 +1,33 @@
+{% extends "checker/pages/_page.html" %}
+{% block title %}About: Carverse Check{% endblock %}
+{% block meta_description %}Why Carverse Check exists, who built it, and how it's put together.{% endblock %}
+{% block eyebrow %}ABOUT{% endblock %}
+{% block page_title %}A used-car check that shows its working{% endblock %}
+{% block lead %}Carverse Check reads a car's official MOT history, points out what doesn't add up, and compares the car with others like it, with the evidence for every finding.{% endblock %}
+{% block toc %}
+<a href="#why">Why it exists</a>
+<a href="#who">Who built it</a>
+<a href="#how">How it's built</a>
+<a href="#independent">Independence</a>
+{% endblock %}
+{% block body %}
+<h2 id="why">Why it exists</h2>
+<p>Buying a used car means trusting what the seller tells you. The MOT history is one of the few independent records you can see before you buy, but on its own it's a long list of dates, mileages and defect codes. It takes time to spot a mileage that went backwards, or the same warning appearing year after year.</p>
+<p>Carverse Check does that reading for you and turns it into questions you can put to the seller. It also answers something the MOT history can't: whether this kind of car, at this age, tends to fail more or less often than others.</p>
+
+<h2 id="who">Who built it</h2>
+<p>I'm Sumit Yadav, an MSc Advanced Computer Science student at the University of Leicester. I built Carverse Check as an independent project to bring together the two kinds of work I enjoy most: building web applications people can use, and the data engineering behind them.</p>
+<p>You can find me on <a href="https://www.linkedin.com/in/yadavsumit2003">LinkedIn</a> and <a href="https://github.com/SumitYadav2003">GitHub</a>, or <a href="{% url 'checker:contact' %}">get in touch</a>.</p>
+
+<h2 id="how">How it's built</h2>
+<ul>
+  <li><strong>Website:</strong> Django, with plain HTML, CSS and JavaScript. Every page works without JavaScript.</li>
+  <li><strong>Live data:</strong> the DVSA MOT history API, with sign-in tokens and answers cached to respect its limits.</li>
+  <li><strong>Data pipeline:</strong> DuckDB and dbt, turning DVSA's anonymised data on {{ facts.tests }} MOT tests into tested summary tables.</li>
+  <li><strong>Quality:</strong> automated tests and a check against DVSA's published statistics, run on every change with GitHub Actions.</li>
+</ul>
+<p>The <a href="{% url 'checker:methodology' %}">methodology</a> page goes into the detail.</p>
+
+<h2 id="independent">Independence</h2>
+<p>Carverse Check isn't affiliated with, endorsed by or connected to DVSA or any other government body. It uses public sector information licensed under the Open Government Licence v3.0. It has no adverts and no paid upgrades. It doesn't sell data, and the only thing it passes on is the number plate, to DVSA, to fetch the history you asked for.</p>
+{% endblock %}

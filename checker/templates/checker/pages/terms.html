@@ -1,0 +1,49 @@
+{% extends "checker/pages/_page.html" %}
+{% block title %}Terms of use: Carverse Check{% endblock %}
+{% block meta_description %}The terms for using Carverse Check: what the service is, what it isn't, and fair use.{% endblock %}
+{% block eyebrow %}TERMS OF USE{% endblock %}
+{% block page_title %}Terms of use{% endblock %}
+{% block lead %}By using Carverse Check you agree to these terms. They're written to be read, so please do.{% endblock %}
+{% block updated %}<p class="page-updated">LAST UPDATED 23 OCTOBER 2026</p>{% endblock %}
+{% block toc %}
+<a href="#service">What the service is</a>
+<a href="#accuracy">Accuracy</a>
+<a href="#use">Fair use</a>
+<a href="#availability">Availability</a>
+<a href="#ip">Content and data</a>
+<a href="#liability">Our responsibility</a>
+<a href="#law">Law</a>
+{% endblock %}
+{% block body %}
+<h2 id="service">What the service is</h2>
+<p>Carverse Check is a free information service, run by Sumit Yadav as an independent project. It shows a vehicle's MOT history as published by DVSA, points out patterns in it, and compares the vehicle's model with others of the same age.</p>
+<p class="callout callout-warn">It is not advice to buy or not buy a vehicle, and it isn't a substitute for an inspection by a qualified mechanic or a full vehicle history check.</p>
+
+<h2 id="accuracy">Accuracy</h2>
+<ul>
+  <li>MOT records come from DVSA and can contain mistakes made when they were entered. We show them as DVSA holds them.</li>
+  <li>Our findings are automated readings of those records. A finding is a reason to ask a question, not proof that anything is wrong.</li>
+  <li>Comparisons describe groups of vehicles, not the vehicle you're checking. The <a href="{% url 'checker:methodology' %}">methodology</a> explains how they're made and their limits.</li>
+</ul>
+
+<h2 id="use">Fair use</h2>
+<p>You may use Carverse Check to check vehicles for your own purposes. Please don't:</p>
+<ul>
+  <li>run automated or bulk lookups, or copy reports at scale</li>
+  <li>try to get round any limits, or interfere with how the site works</li>
+  <li>use the service to harass anyone or for anything unlawful</li>
+</ul>
+<p>DVSA limits how often its service can be used. We may block traffic that would put the site over those limits.</p>
+
+<h2 id="availability">Availability</h2>
+<p>We aim to keep the site running, but it depends on DVSA's service and our hosting, and it may be unavailable or change without notice.</p>
+
+<h2 id="ip">Content and data</h2>
+<p>MOT data is provided by DVSA and contains public sector information licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">Open Government Licence v3.0</a>. The site's design, text and code are © Sumit Yadav.</p>
+
+<h2 id="liability">Our responsibility</h2>
+<p>The service is provided free and as it is. To the extent the law allows, we're not responsible for losses arising from decisions made using it. Nothing in these terms limits liability that can't legally be limited, including for death or personal injury caused by negligence, or for fraud.</p>
+
+<h2 id="law">Law</h2>
+<p>These terms are governed by the law of England and Wales. Questions about them: <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.</p>
+{% endblock %}

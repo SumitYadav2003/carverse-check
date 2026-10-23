@@ -2,6 +2,8 @@
 -- Follows DVSA's method for "initial failures by defect category": a test counts towards a
 -- category if it had at least one Fail or PRS item in that category. Advisories are
 -- counted the same way, separately.
+-- Only groups with at least var('min_tests_for_categories') tests: a category is a small
+-- slice of a group, so it needs more tests than the overall rate before it means anything.
 with base as (
     select * from {{ ref('int_initial_car_tests') }}
 ),
@@ -50,6 +52,7 @@ groups as (
     join {{ ref('mart_model_year_fail_rates') }} m
       on m.vehicle_model_key = w.vehicle_model_key
      and m.first_use_year = w.first_use_year
+    where m.tests >= {{ var('min_tests_for_categories') }}
     group by m.model_year_key, w.defect_category
 )
 
@@ -64,6 +67,9 @@ select
     g.tests_with_failure_item,
     g.tests_with_advisory,
     round(100.0 * g.tests_with_failure_item / m.tests, 2) as failure_share_pct,
+    -- bottom of the 95% range: a category is only called "above average" if even this
+    -- is above the peer share
+    round(100 * {{ wilson_bound('g.tests_with_failure_item', 'm.tests', 'low') }}, 2) as failure_share_low_pct,
     round(100.0 * g.tests_with_advisory / m.tests, 2)     as advisory_share_pct,
     round(p.peer_failure_share_pct, 2)  as peer_failure_share_pct,
     round(p.peer_advisory_share_pct, 2) as peer_advisory_share_pct

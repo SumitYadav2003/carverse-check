@@ -12,8 +12,25 @@ clean-targets: ["target", "logs"]
 
 vars:
   # A make/model/first-use-year group needs at least this many initial tests before we
-  # publish a failure rate for it. Small groups give percentages that swing wildly.
-  min_tests_per_group: 100
+  # publish a failure rate for it. Small groups are allowed because every rate comes with
+  # a 95% range and an adjusted estimate (see int_peer_year_spread), so a small group is
+  # shown as uncertain instead of being hidden.
+  min_tests_per_group: 30
+  # Defect-category shares are split into many small slices, so they need bigger groups.
+  min_tests_for_categories: 100
+  # The spread between models of one age is only estimated when that age has at least
+  # this many model groups; with fewer, the funnel falls back to chance alone.
+  min_groups_for_spread: 10
+  # Before estimating that spread, z-scores are clipped to these percentiles so a few
+  # extreme models can't inflate it. Spiegelhalter (2005) clips at 10%, but in simulation
+  # (pipeline/check_spread_estimator.py) that halved the spread when every model genuinely
+  # differs. 1% stayed within about 10% of the true spread, with and without extreme
+  # models, and when it misses it errs high, which flags fewer models: the cautious side.
+  spread_clip_quantile: 0.01
+  # A model is only called better or worse than its peers if its adjusted rate is at least
+  # this many points away, as well as clearly away given the data. Smaller gaps are real
+  # but too small to matter to a buyer.
+  min_meaningful_difference_pts: 1.0
 
 models:
   carverse:

@@ -1,5 +1,5 @@
 """
-Copy the two dbt marts from the DuckDB warehouse into the website's database.
+Copy the dbt marts from the DuckDB warehouse into the website's database.
 
     python manage.py load_mot_marts
     python manage.py load_mot_marts --warehouse path/to/mot.duckdb
@@ -17,15 +17,24 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
-from checker.models import ModelYearDefectCategory, ModelYearFailRate
+from checker.models import ModelYearDefectCategory, ModelYearFailRate, OdometerRounding
 
-RATE_COLUMNS = ["model_year_key", "make", "model", "first_use_year", "tests",
-                "initial_fail_rate_pct", "final_fail_rate_pct", "median_mileage", "peer_tests",
+RATE_COLUMNS = ["model_year_key", "make", "model", "first_use_year", "tests", "initial_fails",
+                "initial_fail_rate_pct", "final_fail_rate_pct",
+                "initial_fail_rate_low_pct", "initial_fail_rate_high_pct",
+                "estimated_initial_fail_rate_pct", "estimated_low_pct", "estimated_high_pct",
+                "median_mileage", "mileage_readings",
+                "miles_per_year_p10", "miles_per_year_p25", "miles_per_year_p50",
+                "miles_per_year_p75", "miles_per_year_p90", "peer_tests",
                 "peer_initial_fail_rate_pct", "peer_final_fail_rate_pct",
-                "initial_fail_rate_vs_peers_pts"]
+                "initial_fail_rate_vs_peers_pts", "peer_between_model_sd_pts",
+                "funnel_low_95_pct", "funnel_high_95_pct", "funnel_low_998_pct",
+                "funnel_high_998_pct", "vs_peers", "funnel_position"]
 CATEGORY_COLUMNS = ["model_year_key", "defect_category", "tests_with_failure_item",
-                    "tests_with_advisory", "failure_share_pct", "advisory_share_pct",
-                    "peer_failure_share_pct", "peer_advisory_share_pct"]
+                    "tests_with_advisory", "failure_share_pct", "failure_share_low_pct",
+                    "advisory_share_pct", "peer_failure_share_pct", "peer_advisory_share_pct"]
+ODOMETER_COLUMNS = ["check_key", "check_name", "pattern", "readings", "total_readings",
+                    "share_pct", "expected_share_pct"]
 
 
 class Command(BaseCommand):
@@ -59,6 +68,9 @@ class Command(BaseCommand):
             categories = con.execute(
                 f"SELECT {', '.join(CATEGORY_COLUMNS)} FROM marts.mart_model_year_defect_categories"
             ).fetchall()
+            odometer = con.execute(
+                f"SELECT {', '.join(ODOMETER_COLUMNS)} FROM marts.mart_odometer_rounding"
+            ).fetchall()
         except duckdb.CatalogException as exc:
             raise CommandError(f"The marts are missing. Run dbt build first. ({exc})")
         finally:
@@ -77,11 +89,15 @@ class Command(BaseCommand):
             values["model_year_id"] = values.pop("model_year_key")
             category_objects.append(ModelYearDefectCategory(**values))
 
+        odometer_objects = [OdometerRounding(**dict(zip(ODOMETER_COLUMNS, row))) for row in odometer]
+
         with transaction.atomic():
             ModelYearDefectCategory.objects.all().delete()
             ModelYearFailRate.objects.all().delete()
+            OdometerRounding.objects.all().delete()
             ModelYearFailRate.objects.bulk_create(rate_objects, batch_size=batch_size)
             ModelYearDefectCategory.objects.bulk_create(category_objects, batch_size=batch_size)
+            OdometerRounding.objects.bulk_create(odometer_objects)
 
         self.stdout.write(self.style.SUCCESS(
             f"Loaded {len(rate_objects):,} model-year groups and "

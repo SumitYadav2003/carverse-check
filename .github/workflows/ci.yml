@@ -64,10 +64,11 @@ jobs:
       - name: dbt build (models and data tests)
         working-directory: transform
         # The DVSA reconciliation test only makes sense on the real data, so it's excluded
-        # here; it runs on every local build against the real warehouse.
+        # here; it runs on every local build against the real warehouse. The sample data is
+        # small, so the size thresholds are lowered to make every statistic get calculated.
         run: >
           dbt build --profiles-dir .
-          --vars '{min_tests_per_group: 20}'
+          --vars '{min_tests_per_group: 20, min_tests_for_categories: 20, min_groups_for_spread: 3}'
           --exclude assert_matches_dvsa_published_rates
 
       - name: Load the marts into Django

@@ -7,9 +7,20 @@ select
     t.vehicle_model_key,
     m.make,
     m.model,
+    t.test_date,
+    t.first_use_date,
     t.first_use_year,
     t.vehicle_age_years,
     t.test_mileage,
+    -- Average miles a year since the car was first used. Only when the reading is real
+    -- (above 0), the exact first-use date is known (copies agreed on it) and the car is
+    -- at least 2.5 years old: a first MOT is due at 3 years, so anything younger is odd.
+    case
+        when t.test_mileage > 0
+         and t.first_use_date is not null
+         and date_diff('day', t.first_use_date, t.test_date) >= 913
+        then t.test_mileage / (date_diff('day', t.first_use_date, t.test_date) / 365.25)
+    end as miles_per_year,
     t.is_initial_fail,
     t.is_final_fail
 from {{ ref('fct_mot_tests') }} t
