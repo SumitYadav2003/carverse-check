@@ -10,8 +10,9 @@ carverse:
       # Applied once, when the database is opened. temp_directory must live here: DuckDB
       # refuses to change it after it has spilled to disk, and anything under "settings"
       # is re-applied every time dbt opens a new cursor.
+      # MOT_WAREHOUSE_TMP overrides it (the Prefect flow passes absolute paths for both).
       config_options:
-        temp_directory: ../data/warehouse/duckdb_tmp
+        temp_directory: "{{ env_var('MOT_WAREHOUSE_TMP', '../data/warehouse/duckdb_tmp') }}"
       # Re-applied on every cursor, which is fine for this one.
       settings:
         preserve_insertion_order: false

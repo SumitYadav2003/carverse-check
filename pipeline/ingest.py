@@ -137,55 +137,76 @@ def load_file(con, path: Path, digest: str):
     return table, rows, rejected
 
 
-def main():
-    if len(sys.argv) != 2:
-        sys.exit("Usage: python pipeline/ingest.py data/raw/2024")
-    extracted = Path(sys.argv[1]) / "extracted"
+class IngestError(Exception):
+    """A problem with the input folder, raised instead of exiting so callers can handle it."""
+
+
+def run(raw_dir, warehouse=None, log=print):
+    """Load every new or changed file under <raw_dir>/extracted into the warehouse.
+
+    Returns {"loaded": n, "skipped": n}. Used by the command line (main, below) and by
+    the Prefect flow in orchestration/flow.py, which skips the rest of the pipeline when
+    nothing was loaded.
+    """
+    warehouse = Path(warehouse or WAREHOUSE)
+    extracted = Path(raw_dir) / "extracted"
     if not extracted.is_dir():
-        sys.exit(f"{extracted} not found. Run profile_raw.py first; it unzips the files.")
+        raise IngestError(f"{extracted} not found. Run profile_raw.py first; it unzips the files.")
     # Skip macOS zip junk: a __MACOSX folder of "._name.csv" metadata files that aren't data.
     files = sorted(p for p in extracted.rglob("*.csv")
                    if p.is_file() and not p.name.startswith(".") and "__MACOSX" not in p.parts)
     if not files:
-        sys.exit(f"No .csv files under {extracted}")
+        raise IngestError(f"No .csv files under {extracted}")
 
-    WAREHOUSE.parent.mkdir(parents=True, exist_ok=True)
-    con = duckdb.connect(str(WAREHOUSE))
-    # big loads: let DuckDB use less memory, and spill to disk instead of failing
-    con.execute("SET preserve_insertion_order = false")
-    con.execute(f"SET temp_directory = '{(WAREHOUSE.parent / 'duckdb_tmp').as_posix()}'")
-    con.execute("CREATE SCHEMA IF NOT EXISTS raw")
-    con.execute("""CREATE TABLE IF NOT EXISTS raw._load_manifest (
-        file_name VARCHAR PRIMARY KEY, target_table VARCHAR, sha256 VARCHAR,
-        size_bytes BIGINT, row_count BIGINT, loaded_at TIMESTAMP)""")
-    # added after the first loads, so older warehouses get the column too
-    con.execute("ALTER TABLE raw._load_manifest ADD COLUMN IF NOT EXISTS rejected_rows BIGINT DEFAULT 0")
-    con.execute("""CREATE TABLE IF NOT EXISTS raw._rejects (
-        source_file VARCHAR, line BIGINT, error_type VARCHAR, csv_line VARCHAR,
-        error_message VARCHAR, loaded_at TIMESTAMP)""")
+    warehouse.parent.mkdir(parents=True, exist_ok=True)
+    con = duckdb.connect(str(warehouse))
+    try:
+        # big loads: let DuckDB use less memory, and spill to disk instead of failing
+        con.execute("SET preserve_insertion_order = false")
+        con.execute(f"SET temp_directory = '{(warehouse.parent / 'duckdb_tmp').as_posix()}'")
+        con.execute("CREATE SCHEMA IF NOT EXISTS raw")
+        con.execute("""CREATE TABLE IF NOT EXISTS raw._load_manifest (
+            file_name VARCHAR PRIMARY KEY, target_table VARCHAR, sha256 VARCHAR,
+            size_bytes BIGINT, row_count BIGINT, loaded_at TIMESTAMP)""")
+        # added after the first loads, so older warehouses get the column too
+        con.execute("ALTER TABLE raw._load_manifest ADD COLUMN IF NOT EXISTS rejected_rows BIGINT DEFAULT 0")
+        con.execute("""CREATE TABLE IF NOT EXISTS raw._rejects (
+            source_file VARCHAR, line BIGINT, error_type VARCHAR, csv_line VARCHAR,
+            error_message VARCHAR, loaded_at TIMESTAMP)""")
 
-    loaded = skipped = 0
-    for path in files:
-        digest = sha256(path)
-        already = con.execute("SELECT sha256 FROM raw._load_manifest WHERE file_name = ?",
-                              [path.name]).fetchone()
-        if already and already[0] == digest:
-            print(f"skip   {path.name} (already loaded, unchanged)")
-            skipped += 1
-            continue
-        started = time.time()
-        action = "reload" if already else "load  "
-        table, rows, rejected = load_file(con, path, digest)
-        note = f", {rejected:,} unparseable line(s) set aside in raw._rejects" if rejected else ""
-        print(f"{action} {path.name} -> {table}: {rows:,} rows in {time.time() - started:.0f}s{note}")
-        loaded += 1
+        loaded = skipped = 0
+        for path in files:
+            digest = sha256(path)
+            already = con.execute("SELECT sha256 FROM raw._load_manifest WHERE file_name = ?",
+                                  [path.name]).fetchone()
+            if already and already[0] == digest:
+                log(f"skip   {path.name} (already loaded, unchanged)")
+                skipped += 1
+                continue
+            started = time.time()
+            action = "reload" if already else "load  "
+            table, rows, rejected = load_file(con, path, digest)
+            note = f", {rejected:,} unparseable line(s) set aside in raw._rejects" if rejected else ""
+            log(f"{action} {path.name} -> {table}: {rows:,} rows in {time.time() - started:.0f}s{note}")
+            loaded += 1
 
-    print(f"\nDone: {loaded} loaded, {skipped} skipped. Warehouse: {WAREHOUSE}")
-    for t, n, r, rej in con.execute(
-            "SELECT target_table, count(*), sum(row_count), sum(coalesce(rejected_rows, 0)) "
-            "FROM raw._load_manifest GROUP BY 1 ORDER BY 1").fetchall():
-        print(f"  {t}: {n} file(s), {r:,} rows" + (f", {rej:,} rejected" if rej else ""))
-    con.close()
+        log(f"\nDone: {loaded} loaded, {skipped} skipped. Warehouse: {warehouse}")
+        for t, n, r, rej in con.execute(
+                "SELECT target_table, count(*), sum(row_count), sum(coalesce(rejected_rows, 0)) "
+                "FROM raw._load_manifest GROUP BY 1 ORDER BY 1").fetchall():
+            log(f"  {t}: {n} file(s), {r:,} rows" + (f", {rej:,} rejected" if rej else ""))
+    finally:
+        con.close()
+    return {"loaded": loaded, "skipped": skipped}
+
+
+def main():
+    if len(sys.argv) != 2:
+        sys.exit("Usage: python pipeline/ingest.py data/raw/2024")
+    try:
+        run(sys.argv[1])
+    except IngestError as exc:
+        sys.exit(str(exc))
 
 
 if __name__ == "__main__":

@@ -66,50 +66,284 @@ models:
   - name: mart_model_year_fail_rates
     description: >
       Initial and final MOT failure rates for cars (class 4) by make, model and year of
-      first use, next to the rate for all cars first used in the same year. Only groups
-      with at least var('min_tests_per_group') initial tests. Each rate has a 95% range
-      (Wilson), an adjusted estimate with its own range (empirical Bayes) and funnel
-      limits (Spiegelhalter). vs_peers is the verdict shown to buyers; funnel_position says
-      whether the model stands out from other models of the same age.
+      first use, next to the rate for all cars first used in the same year. Only groups with
+      at least var('min_tests_per_group') initial tests. Each rate has a 95% range (Wilson),
+      an adjusted estimate with its own range (empirical Bayes) and funnel limits
+      (Spiegelhalter). vs_peers is the verdict shown to buyers; funnel_position says whether
+      the model stands out from other models of the same age.
+    config:
+      # The website reads this table (load_mot_marts). The contract fixes every column's
+      # name and type, so a change that would break the site fails the dbt build instead.
+      contract:
+        enforced: true
     columns:
       - name: model_year_key
+        data_type: varchar
+        description: Make, model and year of first use, joined.
+        constraints:
+          - type: primary_key
         data_tests: [unique, not_null]
-      - name: vs_peers
-        data_tests:
-          - accepted_values:
-              arguments:
-                values: ['higher', 'lower', 'within']
-      - name: funnel_position
-        data_tests:
-          - accepted_values:
-              arguments:
-                values: ['above', 'below', 'inside']
       - name: vehicle_model_key
+        data_type: varchar
+        constraints:
+          - type: not_null
         data_tests:
           - relationships:
               arguments:
                 to: ref('dim_vehicle_model')
                 field: vehicle_model_key
+      - name: make
+        data_type: varchar
+        constraints:
+          - type: not_null
+      - name: model
+        data_type: varchar
+        constraints:
+          - type: not_null
+      - name: first_use_year
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: tests
+        data_type: bigint
+        description: Initial MOT tests in the group.
+        constraints:
+          - type: not_null
+      - name: initial_fails
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: initial_fail_rate_pct
+        data_type: double
+        constraints:
+          - type: not_null
+      - name: final_fail_rate_pct
+        data_type: double
+        constraints:
+          - type: not_null
+      - name: initial_fail_rate_low_pct
+        data_type: double
+        description: Bottom of the 95% Wilson range.
+        constraints:
+          - type: not_null
+      - name: initial_fail_rate_high_pct
+        data_type: double
+        description: Top of the 95% Wilson range.
+        constraints:
+          - type: not_null
+      - name: estimated_initial_fail_rate_pct
+        data_type: double
+        description: Empirical Bayes estimate, the raw rate pulled towards the peer rate.
+        constraints:
+          - type: not_null
+      - name: estimated_low_pct
+        data_type: double
+        constraints:
+          - type: not_null
+      - name: estimated_high_pct
+        data_type: double
+        constraints:
+          - type: not_null
+      - name: median_mileage
+        data_type: bigint
+      - name: mileage_readings
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: miles_per_year_p10
+        data_type: bigint
+      - name: miles_per_year_p25
+        data_type: bigint
+      - name: miles_per_year_p50
+        data_type: bigint
+      - name: miles_per_year_p75
+        data_type: bigint
+      - name: miles_per_year_p90
+        data_type: bigint
+      - name: peer_tests
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: peer_initial_fail_rate_pct
+        data_type: double
+        constraints:
+          - type: not_null
+      - name: peer_final_fail_rate_pct
+        data_type: double
+        constraints:
+          - type: not_null
+      - name: initial_fail_rate_vs_peers_pts
+        data_type: double
+        constraints:
+          - type: not_null
+      - name: peer_between_model_sd_pts
+        data_type: double
+        description: How much models of this age genuinely differ, in points.
+        constraints:
+          - type: not_null
+      - name: funnel_low_95_pct
+        data_type: double
+        constraints:
+          - type: not_null
+      - name: funnel_high_95_pct
+        data_type: double
+        constraints:
+          - type: not_null
+      - name: funnel_low_998_pct
+        data_type: double
+        constraints:
+          - type: not_null
+      - name: funnel_high_998_pct
+        data_type: double
+        constraints:
+          - type: not_null
+      - name: vs_peers
+        data_type: varchar
+        description: The verdict shown to buyers (higher, lower or within).
+        constraints:
+          - type: not_null
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['higher', 'lower', 'within']
+      - name: funnel_position
+        data_type: varchar
+        description: Above, below or inside the 95% funnel.
+        constraints:
+          - type: not_null
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['above', 'below', 'inside']
 
   - name: mart_model_year_defect_categories
     description: >
       Share of initial tests with at least one Fail/PRS item (and, separately, at least one
       advisory) in each defect category, by make, model and year of first use, next to the
-      same-age average.
+      same-age average. Only groups with at least var('min_tests_for_categories') tests.
+    config:
+      # The website reads this table (load_mot_marts). The contract fixes every column's
+      # name and type, so a change that would break the site fails the dbt build instead.
+      contract:
+        enforced: true
     columns:
       - name: model_year_category_key
+        data_type: varchar
+        constraints:
+          - type: primary_key
         data_tests: [unique, not_null]
       - name: model_year_key
+        data_type: varchar
+        constraints:
+          - type: not_null
         data_tests:
           - relationships:
               arguments:
                 to: ref('mart_model_year_fail_rates')
                 field: model_year_key
+      - name: make
+        data_type: varchar
+        constraints:
+          - type: not_null
+      - name: model
+        data_type: varchar
+        constraints:
+          - type: not_null
+      - name: first_use_year
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: defect_category
+        data_type: varchar
+        constraints:
+          - type: not_null
+      - name: tests
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: tests_with_failure_item
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: tests_with_advisory
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: failure_share_pct
+        data_type: double
+        constraints:
+          - type: not_null
+      - name: failure_share_low_pct
+        data_type: double
+        description: Bottom of the 95% Wilson range.
+        constraints:
+          - type: not_null
+      - name: advisory_share_pct
+        data_type: double
+        constraints:
+          - type: not_null
+      - name: peer_failure_share_pct
+        data_type: double
+        constraints:
+          - type: not_null
+      - name: peer_advisory_share_pct
+        data_type: double
+        constraints:
+          - type: not_null
 
   - name: mart_odometer_rounding
     description: >
       Data-quality check on odometer readings: share of readings by last digit, and ending
       in 00 or 000, next to the share expected if readings were never rounded.
+    config:
+      # The website reads this table (load_mot_marts). The contract fixes every column's
+      # name and type, so a change that would break the site fails the dbt build instead.
+      contract:
+        enforced: true
     columns:
       - name: check_key
+        data_type: varchar
+        constraints:
+          - type: primary_key
         data_tests: [unique, not_null]
+      - name: check_name
+        data_type: varchar
+        description: last_digit or ends_with.
+        constraints:
+          - type: not_null
+      - name: pattern
+        data_type: varchar
+        constraints:
+          - type: not_null
+      - name: readings
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: total_readings
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: share_pct
+        data_type: double
+        constraints:
+          - type: not_null
+      - name: expected_share_pct
+        data_type: double
+        constraints:
+          - type: not_null
+
+exposures:
+  - name: carverse_check_website
+    label: Carverse Check website
+    type: application
+    maturity: medium
+    description: >
+      The Django website. load_mot_marts copies these three marts into its database; the
+      report pages and the methodology page read them from there.
+    owner:
+      name: Sumit Yadav
+      email: culinaai.project@gmail.com
+    depends_on:
+      - ref('mart_model_year_fail_rates')
+      - ref('mart_model_year_defect_categories')
+      - ref('mart_odometer_rounding')

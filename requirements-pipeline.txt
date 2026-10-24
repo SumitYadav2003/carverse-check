@@ -3,3 +3,6 @@
 -r requirements.txt
 dbt-core==1.12.6
 dbt-duckdb==1.11.0
+# Orchestration: runs ingest -> dbt -> publish as one monitored, scheduled flow
+prefect==3.9.0
+prefect-dbt==0.7.25

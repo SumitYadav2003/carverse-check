@@ -34,13 +34,17 @@ jobs:
         run: python manage.py check --deploy --fail-level WARNING
 
   pipeline:
-    name: Pipeline (ingest, dbt, load) on sample data
+    name: Pipeline (Prefect flow - ingest, dbt, publish) on sample data
     runs-on: ubuntu-latest
     env:
       DJANGO_SECRET_KEY: ci-only-not-a-real-secret
       DJANGO_DEBUG: "0"
       # CI builds its own small warehouse from generated sample data, never the real one
       MOT_WAREHOUSE: ${{ github.workspace }}/data/warehouse/ci.duckdb
+      PREFECT_SERVER_ANALYTICS_ENABLED: "false"
+      # The sample data is small, so the size thresholds are lowered to make every
+      # statistic get calculated.
+      DBT_VARS: '{"min_tests_per_group": 20, "min_tests_for_categories": 20, "min_groups_for_spread": 3}'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -53,25 +57,72 @@ jobs:
       - name: Generate sample data in DVSA's file format
         run: python pipeline/make_sample_data.py data/raw/sample
 
-      - name: Ingest raw files into DuckDB
-        run: python pipeline/ingest.py data/raw/sample
+      - name: Create the website database
+        run: python manage.py migrate --noinput
 
-      - name: Ingest again (must skip every file)
+      - name: Run the flow (ingest, dbt build with all tests and contracts, publish)
+        # The DVSA reconciliation test only makes sense on the real data, so it's skipped
+        # here; it runs on every local build against the real warehouse.
         run: |
-          python pipeline/ingest.py data/raw/sample | tee rerun.log
-          grep -q "0 loaded" rerun.log
+          python -m orchestration.flow run --raw-dir data/raw/sample --dbt-vars "$DBT_VARS" --skip-reconciliation | tee run1.log
+          grep -q '"status": "refreshed"' run1.log
 
-      - name: dbt build (models and data tests)
-        working-directory: transform
-        # The DVSA reconciliation test only makes sense on the real data, so it's excluded
-        # here; it runs on every local build against the real warehouse. The sample data is
-        # small, so the size thresholds are lowered to make every statistic get calculated.
-        run: >
-          dbt build --profiles-dir .
-          --vars '{min_tests_per_group: 20, min_tests_for_categories: 20, min_groups_for_spread: 3}'
-          --exclude assert_matches_dvsa_published_rates
-
-      - name: Load the marts into Django
+      - name: Run it again (nothing new, so it must skip the rebuild)
         run: |
+          python -m orchestration.flow run --raw-dir data/raw/sample --dbt-vars "$DBT_VARS" --skip-reconciliation | tee run2.log
+          grep -q '"status": "up to date"' run2.log
+
+  browser:
+    name: Browser tests (Playwright, axe accessibility checks)
+    runs-on: ubuntu-latest
+    env:
+      DJANGO_SECRET_KEY: ci-only-not-a-real-secret
+      DJANGO_DEBUG: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements-e2e.txt
+      - run: pip install -r requirements-e2e.txt
+      - name: Install Chromium for Playwright
+        run: python -m playwright install --with-deps chromium
+      - name: Run the browser tests
+        run: python manage.py test e2e
+
+  lighthouse:
+    name: Lighthouse (production settings)
+    runs-on: ubuntu-latest
+    env:
+      DJANGO_SECRET_KEY: ci-only-lighthouse-key-not-a-real-secret-x9Q2mVr7Lk8Zp
+      DJANGO_DEBUG: "0"
+      # production settings, but over plain http on this machine
+      DJANGO_SECURE_SSL_REDIRECT: "0"
+      DJANGO_ALLOWED_HOSTS: 127.0.0.1,localhost
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - run: pip install -r requirements.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Start the site with gunicorn, as on Render
+        run: |
+          python manage.py collectstatic --noinput
           python manage.py migrate --noinput
-          python manage.py load_mot_marts
+          gunicorn config.wsgi -b 127.0.0.1:8000 -w 2 --daemon
+          sleep 2
+          curl --fail --silent --output /dev/null http://127.0.0.1:8000/
+      - name: Run Lighthouse and check the scores (lighthouserc.json)
+        run: npx --yes @lhci/cli@0.15.1 autorun
+      - name: Keep the Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci/reports

@@ -1,0 +1,5 @@
+# Browser tests (e2e/). Only needed on your laptop and in CI. After installing, run once:
+#   python -m playwright install chromium
+-r requirements.txt
+playwright==1.63.0
+axe-playwright-python==0.1.8

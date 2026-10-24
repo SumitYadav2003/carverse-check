@@ -1,0 +1,34 @@
+{
+  "ci": {
+    "collect": {
+      "url": [
+        "http://127.0.0.1:8000/",
+        "http://127.0.0.1:8000/report/SAMPLE3/",
+        "http://127.0.0.1:8000/methodology/"
+      ],
+      "numberOfRuns": 1
+    },
+    "assert": {
+      "assertMatrix": [
+        {
+          "matchingUrlPattern": ".*",
+          "assertions": {
+            "categories:accessibility": ["error", {"minScore": 0.95}],
+            "categories:best-practices": ["error", {"minScore": 0.9}],
+            "categories:performance": ["warn", {"minScore": 0.85}]
+          }
+        },
+        {
+          "matchingUrlPattern": "http://[^/]+/$",
+          "assertions": {
+            "categories:seo": ["error", {"minScore": 0.9}]
+          }
+        }
+      ]
+    },
+    "upload": {
+      "target": "filesystem",
+      "outputDir": ".lighthouseci/reports"
+    }
+  }
+}

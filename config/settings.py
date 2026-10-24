@@ -48,6 +48,10 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",   # serves CSS/JS on Render
+    # Compresses pages (CSS/JS are already compressed by WhiteNoise). The public pages hold
+    # no secrets, and Django masks CSRF tokens differently on every response (the admin
+    # login), which is Django's defence against the BREACH compression attack.
+    "django.middleware.gzip.GZipMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -121,7 +125,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-    SECURE_SSL_REDIRECT = True
+    # On unless DJANGO_SECURE_SSL_REDIRECT=0: CI's Lighthouse job runs production settings
+    # over plain http on its own machine, where there's no HTTPS to redirect to.
+    SECURE_SSL_REDIRECT = os.environ.get("DJANGO_SECURE_SSL_REDIRECT", "1") == "1"
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30

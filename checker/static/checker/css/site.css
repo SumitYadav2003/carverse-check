@@ -26,7 +26,7 @@
   --text: #EEECE4;
   --text-2: #C9C7BF;
   --muted: #A9A89F;
-  --faint: #7E7D76;
+  --faint: #8F8E86;   /* 4.5:1 or better on every background (WCAG AA), checked by the e2e axe test */
   --plate: #F4C21B;
   --plate-hover: #FFD95A;
   --plate-band: #1F4FA8;

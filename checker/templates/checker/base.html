@@ -27,8 +27,8 @@
   {% with page=request.resolver_match.url_name %}
   <header class="site-header" data-header>
     <div class="container header-inner">
-      <a class="wordmark" href="{% url 'checker:home' %}" aria-label="Carverse Check home">
-        <span class="wordmark-name">Carverse</span><span class="wordmark-tag">CHECK</span>
+      <a class="wordmark" href="{% url 'checker:home' %}">
+        <span class="wordmark-name">Carverse</span> <span class="wordmark-tag">CHECK</span><span class="visually-hidden"> home</span>
       </a>
       <nav class="site-nav" id="site-nav" aria-label="Main">
         <a href="{% url 'checker:how_it_works' %}"{% if page == 'how_it_works' %} aria-current="page"{% endif %}>How it works</a>
@@ -50,8 +50,8 @@
   <footer class="site-footer">
     <div class="container footer-grid">
       <div class="footer-brand">
-        <a class="wordmark" href="{% url 'checker:home' %}" aria-label="Carverse Check home">
-          <span class="wordmark-name">Carverse</span><span class="wordmark-tag">CHECK</span>
+        <a class="wordmark" href="{% url 'checker:home' %}">
+          <span class="wordmark-name">Carverse</span> <span class="wordmark-tag">CHECK</span><span class="visually-hidden"> home</span>
         </a>
         <p>A free check of a UK car's official MOT history, built as an independent project. Not affiliated with or endorsed by DVSA.</p>
       </div>

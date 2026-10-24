@@ -1,0 +1,161 @@
+"""
+End-to-end tests in a real browser (Playwright + Chromium), against a live test server.
+
+They cover what unit tests can't: JavaScript behaviour, the stylesheet actually applying,
+keyboard use, the phone layout, printing, and automated accessibility checks (axe-core).
+"""
+
+import os
+
+# Playwright's synchronous API runs an event loop in this thread, which makes Django's
+# safety check think the database is being used from async code. It isn't.
+os.environ.setdefault("DJANGO_ALLOW_ASYNC_UNSAFE", "true")
+
+from axe_playwright_python.sync_playwright import Axe  # noqa: E402
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase  # noqa: E402
+from django.test import override_settings  # noqa: E402
+from playwright.sync_api import expect, sync_playwright  # noqa: E402
+
+from checker.tests_marts import add_category, make_rate  # noqa: E402
+
+PHONE = {"width": 390, "height": 844}
+DESKTOP = {"width": 1366, "height": 900}
+PLATE_YELLOW = "rgb(244, 194, 27)"
+
+
+@override_settings(DVSA_CLIENT_ID="")   # demo cars only: never call the real DVSA API
+class BrowserTests(StaticLiveServerTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.playwright = sync_playwright().start()
+        # E2E_BROWSER_PATH: use a Chromium already on the machine instead of Playwright's own
+        cls.browser = cls.playwright.chromium.launch(
+            executable_path=os.environ.get("E2E_BROWSER_PATH") or None)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.browser.close()
+        cls.playwright.stop()
+        super().tearDownClass()
+
+    def open(self, path, viewport=DESKTOP, **context_options):
+        context = self.browser.new_context(viewport=viewport, **context_options)
+        self.addCleanup(context.close)
+        page = context.new_page()
+        errors = []
+        # JavaScript errors, and any file the page needs (CSS, fonts, scripts, images) that
+        # fails to load. The page's own status is left out: a 404 page is meant to be a 404.
+        page.on("pageerror", lambda exc: errors.append(str(exc)))
+        page.on("console", lambda msg: msg.type == "error"
+                and not msg.text.startswith("Failed to load resource") and errors.append(msg.text))
+        page.on("response", lambda r: r.status >= 400 and r.request.resource_type != "document"
+                and errors.append(f"{r.status} {r.url}"))
+        self.addCleanup(lambda: self.assertEqual(errors, [], f"browser errors on {path}"))
+        page.goto(self.live_server_url + path)
+        return page
+
+    # ---------- the main journey ----------
+
+    def test_check_a_car_from_the_home_page(self):
+        page = self.open("/")
+        page.fill("#reg", "sample 3")                  # lower case and a space, as people type
+        expect(page.locator("#reg")).to_have_value("SAMPLE 3")
+        page.click("[data-check-button]")
+        page.wait_for_url("**/report/SAMPLE3/")
+        expect(page.locator("h1")).to_have_text("Vauxhall Corsa")
+        expect(page.get_by_text("Dangerous defect recorded")).to_be_visible()
+
+    def test_empty_plate_is_not_submitted(self):
+        page = self.open("/")
+        page.click("[data-check-button]")
+        self.assertTrue(page.url.endswith("/"))
+        expect(page.locator("#reg")).to_be_focused()
+
+    def test_evidence_chip_jumps_to_the_mot_test(self):
+        page = self.open("/report/SAMPLE3/")
+        chip = page.locator(".finding .chip").first
+        target = chip.get_attribute("href")
+        chip.click()
+        self.assertTrue(page.url.endswith(target))
+        expect(page.locator(target)).to_be_in_viewport()
+
+    def test_unknown_page_shows_the_site_404(self):
+        page = self.open("/no-such-page/")
+        expect(page.locator("h1")).to_have_text("This page doesn't exist")
+
+    # ---------- the comparison section, styled ----------
+
+    def test_comparison_chart_is_drawn_and_styled(self):
+        fiesta = make_rate()                           # SAMPLE1 is a 2016 Ford Fiesta
+        for i in range(6):
+            make_rate(model_year_key=f"m{i}", model=f"MODEL {i}", tests=100 * (i + 1),
+                      initial_fail_rate_pct=20 + i, vs_peers="within", funnel_position="inside")
+        add_category(fiesta, "Brakes", 9.0, 6.0)
+        page = self.open("/report/SAMPLE1/")
+        dot = page.locator(".funnel-this")
+        expect(dot).to_be_visible()
+        # the bug where the chart showed up black and white: the stylesheet must apply
+        self.assertEqual(dot.evaluate("el => getComputedStyle(el).fill"), PLATE_YELLOW)
+        bar = page.locator(".bar-model")
+        self.assertEqual(bar.evaluate("el => getComputedStyle(el).backgroundColor"), PLATE_YELLOW)
+
+    # ---------- phones, keyboards, printing, no JavaScript ----------
+
+    def test_phone_menu_opens_and_closes(self):
+        page = self.open("/help/", viewport=PHONE)
+        button = page.locator("[data-menu-button]")
+        methodology = page.locator("#site-nav").get_by_role("link", name="Methodology")
+        expect(methodology).to_be_hidden()
+        button.click()
+        expect(button).to_have_attribute("aria-expanded", "true")
+        expect(methodology).to_be_visible()
+        page.keyboard.press("Escape")
+        expect(button).to_have_attribute("aria-expanded", "false")
+        expect(button).to_be_focused()
+
+    def test_menu_works_without_javascript(self):
+        page = self.open("/help/", viewport=PHONE, java_script_enabled=False)
+        expect(page.locator("#site-nav").get_by_role("link", name="Methodology")).to_be_visible()
+
+    def test_skip_link_is_first_and_moves_focus_to_the_content(self):
+        page = self.open("/methodology/")
+        page.keyboard.press("Tab")
+        expect(page.get_by_role("link", name="Skip to content")).to_be_focused()
+        page.keyboard.press("Enter")
+        self.assertEqual(page.evaluate("document.activeElement.id"), "main")
+
+    def test_copy_link_puts_the_report_address_on_the_clipboard(self):
+        page = self.open("/report/SAMPLE3/", permissions=["clipboard-read", "clipboard-write"])
+        page.click("[data-copy-link]")
+        expect(page.locator("[data-copy-label]")).to_have_text("Link copied")
+        self.assertEqual(page.evaluate("navigator.clipboard.readText()"),
+                         self.live_server_url + "/report/SAMPLE3/")
+
+    def test_printed_report_drops_navigation_and_keeps_the_summary(self):
+        page = self.open("/report/SAMPLE3/")
+        page.emulate_media(media="print")
+        expect(page.locator(".site-header")).to_be_hidden()
+        expect(page.locator(".aside-actions")).to_be_hidden()
+        expect(page.locator(".aside-glance")).to_be_visible()
+
+    # ---------- accessibility ----------
+
+    def test_no_serious_accessibility_problems(self):
+        """axe-core, the engine behind most accessibility checkers, on the main pages.
+        Fails on any 'serious' or 'critical' problem, listing each one."""
+        make_rate()
+        axe = Axe()
+        for path in ["/", "/report/SAMPLE3/", "/report/SAMPLE1/", "/methodology/", "/help/",
+                     "/privacy/", "/contact/", "/report/NOSUCHCAR/"]:
+            for viewport in (DESKTOP, PHONE):
+                with self.subTest(path=path, width=viewport["width"]):
+                    page = self.open(path, viewport=viewport, reduced_motion="reduce")
+                    results = axe.run(page)
+                    problems = [f"{v['id']} ({v['impact']}): {v['help']} - "
+                                f"{[n['target'] for n in v['nodes'][:3]]}"
+                                for v in results.response["violations"]
+                                if v["impact"] in ("serious", "critical")]
+                    self.assertEqual(problems, [])
+
