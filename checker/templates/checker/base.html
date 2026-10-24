@@ -44,6 +44,7 @@
       </a>
       <nav class="site-nav" id="site-nav" aria-label="Main">
         <a href="{% url 'checker:how_it_works' %}"{% if page == 'how_it_works' %} aria-current="page"{% endif %}>How it works</a>
+        <a href="{% url 'checker:models' %}"{% if page == 'models' or page == 'models_make' or page == 'models_model' %} aria-current="page"{% endif %}>Explore models</a>
         <a href="{% url 'checker:methodology' %}"{% if page == 'methodology' %} aria-current="page"{% endif %}>Methodology</a>
         <a href="{% url 'checker:help' %}"{% if page == 'help' %} aria-current="page"{% endif %}>Help</a>
         <a href="{% url 'checker:report' 'SAMPLE3' %}">Example report</a>
@@ -78,6 +79,7 @@
         <p class="footer-head">Product</p>
         <a href="{% url 'checker:home' %}">Check a car</a>
         <a href="{% url 'checker:how_it_works' %}">How it works</a>
+        <a href="{% url 'checker:models' %}">Explore models</a>
         <a href="{% url 'checker:methodology' %}">Methodology</a>
         <a href="{% url 'checker:report' 'SAMPLE3' %}">Example report</a>
       </nav>

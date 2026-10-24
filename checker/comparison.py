@@ -47,9 +47,13 @@ def _clean(text):
 
 
 def _display_name(text):
-    # FORD -> Ford, but keep short codes such as BMW, MG or 3 SERIES readable
-    return " ".join(w if len(w) <= 3 or any(ch.isdigit() for ch in w) else w.capitalize()
-                    for w in (text or "").split())
+    # FORD -> Ford and MERCEDES-BENZ -> Mercedes-Benz, but keep short codes such as BMW, MG
+    # or 3 SERIES readable
+    def word(w):
+        if len(w) <= 3 or any(ch.isdigit() for ch in w):
+            return w
+        return "-".join(part.capitalize() for part in w.split("-"))
+    return " ".join(word(w) for w in (text or "").split())
 
 
 def _plural(name):
@@ -180,6 +184,13 @@ def mileage_comparison(row, miles_per_year, label):
 
 # ---------- the section ----------
 
+def clearly_higher(category):
+    """A real gap of at least NOTABLY_HIGHER_PTS, and even the bottom of the category's
+    95% range is above the rate for all cars of that age."""
+    return (category.failure_share_pct - category.peer_failure_share_pct >= NOTABLY_HIGHER_PTS
+            and category.failure_share_low_pct > category.peer_failure_share_pct)
+
+
 def build_comparison(vehicle, summary=None):
     """vehicle and summary: the 'vehicle' and 'summary' dicts from analysis.build_report.
     Returns a dict for the template, or None to hide the section."""
@@ -198,16 +209,10 @@ def build_comparison(vehicle, summary=None):
     if row.vs_peers == "within" and row.tests < SMALL_GROUP_TESTS:
         verdict = "not clearly more or less often than"
 
-    categories = []
-    for c in row.defect_categories.order_by("-failure_share_pct")[:TOP_CATEGORIES]:
-        categories.append({
-            "name": c.defect_category,
-            "share": round(c.failure_share_pct, 1),
-            "peer_share": round(c.peer_failure_share_pct, 1),
-            # clearly above: a real gap, and even the bottom of its 95% range is above peers
-            "higher": (c.failure_share_pct - c.peer_failure_share_pct >= NOTABLY_HIGHER_PTS
-                       and c.failure_share_low_pct > c.peer_failure_share_pct),
-        })
+    all_categories = list(row.defect_categories.order_by("-failure_share_pct"))
+    categories = [{"name": c.defect_category, "share": round(c.failure_share_pct, 1),
+                   "peer_share": round(c.peer_failure_share_pct, 1), "higher": clearly_higher(c)}
+                  for c in all_categories[:TOP_CATEGORIES]]
 
     label = f"{first_used.year} {base['plural']}"
     return {
@@ -227,6 +232,9 @@ def build_comparison(vehicle, summary=None):
         "verdict_note": _verdict_note(row),
         "worse": row.vs_peers == "higher",
         "categories": categories,
+        # every category this model clearly fails on more often (used by the seller checklist)
+        "weak_spots": [c.defect_category for c in all_categories if clearly_higher(c)],
+        "make_slug": row.make_slug, "model_slug": row.model_slug,
         "funnel": funnel_plot(row),
         "mileage": mileage_comparison(row, (summary or {}).get("miles_per_year_since_new"), label),
     }

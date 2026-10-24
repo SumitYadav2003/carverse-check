@@ -16,5 +16,8 @@ urlpatterns = [
     path("terms/", views.page, {"template": "terms"}, name="terms"),
     path("accessibility/", views.page, {"template": "accessibility"}, name="accessibility"),
     path("contact/", views.page, {"template": "contact"}, name="contact"),
+    path("models/", views.models_index, name="models"),
+    path("models/<slug:make_slug>/", views.models_make, name="models_make"),
+    path("models/<slug:make_slug>/<slug:model_slug>/", views.models_model, name="models_model"),
     path("robots.txt", views.robots_txt, name="robots"),
 ]

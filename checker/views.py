@@ -1,13 +1,15 @@
 import re
 
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.cache import cache_control
 
 from .analysis import build_report
+from .checklist import build_checklist
 from .comparison import build_comparison
+from . import explore
 from .presenters import present
 from .dvsa import DvsaUnavailable
 from .models import ModelYearFailRate, OdometerRounding
@@ -92,4 +94,37 @@ def report(request, registration):
     report = build_report(vehicle)
     context = present(report, source, today=timezone.localdate())
     context["comparison"] = build_comparison(report["vehicle"], report["summary"])
+    context["checklist"] = build_checklist(report, context["comparison"])
     return render(request, "checker/report.html", context)
+
+
+# ---------- explore models ----------
+
+def models_index(request):
+    years = explore.ranking_years()
+    try:
+        year = int(request.GET.get("year", ""))
+    except ValueError:
+        year = None
+    if year not in years:
+        year = 2016 if 2016 in years else (years[0] if years else None)
+    query = request.GET.get("q", "").strip()[:60]
+    return render(request, "checker/explore/index.html", {
+        "query": query, "results": explore.search(query) if query else None,
+        "makes": explore.popular_makes(), "years": years,
+        "ranking": explore.rankings(year) if year else None,
+    })
+
+
+def models_make(request, make_slug):
+    make = explore.make_models(make_slug)
+    if make is None:
+        raise Http404("No such make")
+    return render(request, "checker/explore/make.html", {"make": make})
+
+
+def models_model(request, make_slug, model_slug):
+    detail = explore.model_detail(make_slug, model_slug)
+    if detail is None:
+        raise Http404("No such model")
+    return render(request, "checker/explore/model.html", {"m": detail})

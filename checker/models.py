@@ -9,6 +9,10 @@ class ModelYearFailRate(models.Model):
     model_year_key = models.CharField(max_length=64, primary_key=True)
     make = models.CharField(max_length=100)
     model = models.CharField(max_length=100)
+    # URL-friendly names for the Explore models pages (FORD -> ford, 3 SERIES -> 3-series),
+    # set by load_mot_marts
+    make_slug = models.SlugField(max_length=100, default="")
+    model_slug = models.SlugField(max_length=100, default="")
     first_use_year = models.PositiveSmallIntegerField()
     test_year = models.PositiveSmallIntegerField(help_text="Year of the MOT tests behind these figures")
     tests = models.PositiveIntegerField()
@@ -51,6 +55,7 @@ class ModelYearFailRate(models.Model):
             models.UniqueConstraint(fields=["make", "model", "first_use_year"],
                                     name="unique_make_model_first_use_year"),
         ]
+        indexes = [models.Index(fields=["make_slug", "model_slug"], name="make_model_slug_idx")]
 
     def __str__(self):
         return f"{self.first_use_year} {self.make} {self.model}"

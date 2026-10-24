@@ -1,0 +1,101 @@
+{% extends "checker/base.html" %}
+{% block title %}Explore models: MOT failure rates by make, model and age, Carverse Check{% endblock %}
+{% block meta_description %}How often each make, model and year of first use failed its MOT in 2024, compared fairly with other cars of the same age, with honest ranges.{% endblock %}
+{% block body_class %}page-content{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <p class="eyebrow">EXPLORE MODELS</p>
+    <h1 class="page-title">How often did each model fail its MOT?</h1>
+    <p class="page-lead">Every make, model and year of first use with at least 30 MOT tests in 2024, compared with other cars of the same age. Every figure comes with a likely range, so a model with a handful of tests can't look better or worse than it really is.</p>
+    <form class="explore-search" action="{% url 'checker:models' %}" method="get" role="search">
+      <label class="visually-hidden" for="model-q">Search for a make or model</label>
+      <input id="model-q" name="q" type="search" value="{{ query }}" placeholder="Search, e.g. Ford Fiesta" autocomplete="off" maxlength="60">
+      <button class="btn-primary" type="submit">Search</button>
+    </form>
+  </div>
+</div>
+
+<div class="container explore">
+  {% if results is not None %}
+  <section class="explore-block" aria-labelledby="results-h">
+    <h2 id="results-h" class="explore-heading">Results for “{{ query }}”</h2>
+    {% if results %}
+    <ul class="result-list">
+      {% for r in results %}
+      <li><a href="{% url 'checker:models_model' r.make_slug r.model_slug %}"><strong>{{ r.name }}</strong><span class="muted">first used {{ r.years }} · {{ r.tests }} tests</span></a></li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">No make or model matched. Try fewer words, or browse by make below.</p>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if makes %}
+  <section class="explore-block" aria-labelledby="makes-h">
+    <h2 id="makes-h" class="explore-heading">Browse by make</h2>
+    <ul class="make-chips">
+      {% for m in makes %}<li><a class="chip" href="{% url 'checker:models_make' m.slug %}">{{ m.name }}</a></li>{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if ranking %}
+  <section class="explore-block" id="rankings" aria-labelledby="rank-h">
+    <div class="rank-head">
+      <h2 id="rank-h" class="explore-heading">Cars first used in {{ ranking.year }}, ranked</h2>
+      <form method="get" action="{% url 'checker:models' %}#rankings" class="year-form">
+        <label for="rank-year">Year of first use</label>
+        <select id="rank-year" name="year">
+          {% for y in years %}<option value="{{ y }}"{% if y == ranking.year %} selected{% endif %}>{{ y }}</option>{% endfor %}
+        </select>
+        <button class="btn-secondary" type="submit">Show</button>
+      </form>
+    </div>
+    <p class="muted">{{ ranking.models }} models. All {{ ranking.year }} cars failed {{ ranking.peer_rate }}% of first MOT attempts in 2024. Ranked by our adjusted estimate, with its likely range.</p>
+
+    <div class="rank-grid">
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Models that failed most often">
+        <table class="data-table rank-table">
+          <caption>Failed most often</caption>
+          <thead><tr><th>#</th><th>Model</th><th class="num">Tests</th><th class="num">Failure rate</th></tr></thead>
+          <tbody>
+            {% for r in ranking.worst %}
+            <tr>
+              <td class="rank-n">{{ forloop.counter }}</td>
+              <td><a href="{% url 'checker:models_model' r.make_slug r.model_slug %}">{{ r.name }}</a>{% if r.small %} <span class="tag tag-ask">FEW TESTS</span>{% endif %}</td>
+              <td class="num">{{ r.tests }}</td>
+              <td class="num"><strong>{{ r.estimate }}%</strong><span class="range">{{ r.low }}–{{ r.high }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Models that failed least often">
+        <table class="data-table rank-table">
+          <caption>Failed least often</caption>
+          <thead><tr><th>#</th><th>Model</th><th class="num">Tests</th><th class="num">Failure rate</th></tr></thead>
+          <tbody>
+            {% for r in ranking.best %}
+            <tr>
+              <td class="rank-n">{{ forloop.counter }}</td>
+              <td><a href="{% url 'checker:models_model' r.make_slug r.model_slug %}">{{ r.name }}</a>{% if r.small %} <span class="tag tag-ask">FEW TESTS</span>{% endif %}</td>
+              <td class="num">{{ r.tests }}</td>
+              <td class="num"><strong>{{ r.estimate }}%</strong><span class="range">{{ r.low }}–{{ r.high }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout-box">
+      <p><strong>Why not just rank by the raw failure rate?</strong> Small groups swing furthest by chance, so they crowd the top and bottom of any raw ranking. Ranked by raw rate, the top 10 here would include <strong>{{ ranking.small_in_raw_top }} model{{ ranking.small_in_raw_top|pluralize }} with fewer than {{ ranking.small_tests }} tests</strong>. Ranked by our adjusted estimate, it includes {{ ranking.small_in_adjusted_top }}. <a href="{% url 'checker:methodology' %}#statistics">How the adjustment works</a></p>
+    </div>
+  </section>
+  {% endif %}
+
+  <p class="muted small explore-note">These figures describe models, not individual cars: how a car has been driven and maintained matters far more. Source: DVSA anonymised MOT test data, 2024. Contains public sector information licensed under the Open Government Licence v3.0.</p>
+</div>
+{% endblock %}

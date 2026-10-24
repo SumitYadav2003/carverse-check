@@ -1,0 +1,27 @@
+{% extends "checker/base.html" %}
+{% block title %}{{ make.name }} MOT failure rates by model: Carverse Check{% endblock %}
+{% block meta_description %}How often each {{ make.name }} model failed its MOT in 2024, by year of first use, compared with other cars of the same age.{% endblock %}
+{% block body_class %}page-content{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <a class="back-link" href="{% url 'checker:models' %}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m11 18-6-6 6-6"/></svg>All makes</a>
+    <p class="eyebrow">EXPLORE MODELS</p>
+    <h1 class="page-title">{{ make.name }}</h1>
+    <p class="page-lead">{{ make.models|length }} model{{ make.models|length|pluralize }} with at least 30 MOT tests in 2024. Pick one to see how it did at each age.</p>
+  </div>
+</div>
+<div class="container explore">
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Models">
+    <table class="data-table">
+      <thead><tr><th>Model</th><th>First used</th><th class="num">MOT tests, 2024</th></tr></thead>
+      <tbody>
+        {% for m in make.models %}
+        <tr><td><a href="{% url 'checker:models_model' make.slug m.slug %}">{{ m.name }}</a></td><td>{{ m.years }}</td><td class="num">{{ m.tests }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="muted small explore-note">Models appear as DVSA records them, so one model can be listed under slightly different names. Source: DVSA anonymised MOT test data, 2024, under the Open Government Licence v3.0.</p>
+</div>
+{% endblock %}

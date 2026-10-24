@@ -82,6 +82,31 @@
     {% endfor %}
   </section>
 
+  {% if checklist %}
+  <section class="card checklist rise" id="questions" style="--d:.4s" aria-labelledby="questions-h">
+    <h2 id="questions-h" class="section-title">Questions to ask the seller</h2>
+    <p class="muted small">Tick them off at the viewing. They're included if you print the report.</p>
+    {% if checklist.from_history %}
+    <h3 class="checklist-sub">From this car's MOT history</h3>
+    <ul class="checklist-list">
+      {% for q in checklist.from_history %}
+      <li><label class="{% if q.serious %}is-serious{% elif q.linked %}is-linked{% endif %}"><input type="checkbox"><span>{{ q.text }}</span></label></li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% if checklist.from_model %}
+    <h3 class="checklist-sub">Common on {{ checklist.model_label }}</h3>
+    <ul class="checklist-list">
+      {% for q in checklist.from_model %}<li><label><input type="checkbox"><span>{{ q.text }}</span></label></li>{% endfor %}
+    </ul>
+    {% endif %}
+    <h3 class="checklist-sub">For any used car</h3>
+    <ul class="checklist-list">
+      {% for q in checklist.for_any_car %}<li><label><input type="checkbox"><span>{{ q }}</span></label></li>{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
   {% include "checker/_comparison.html" %}
 
   {% if chart %}
@@ -146,6 +171,7 @@
     <nav class="aside-card toc" aria-label="On this page">
       <p class="aside-head">On this page</p>
       <a href="#found" data-toc>What we found</a>
+      <a href="#questions" data-toc>Questions to ask</a>
       {% if comparison and comparison.first_use_year %}<a href="#compare" data-toc>Compared with similar cars</a>{% endif %}
       {% if chart %}<a href="#mileage" data-toc>Mileage over time</a>{% endif %}
       <a href="#history" data-toc>Full MOT history</a>

@@ -44,7 +44,7 @@
 
 <h2 id="reconciliation">Checking against DVSA's published figures</h2>
 <p>DVSA publishes its own MOT statistics. If the cleaning were wrong, our totals wouldn't match. For cars and light vans (classes 3 and 4), April to December 2024:</p>
-<div class="table-wrap">
+<div class="table-wrap" tabindex="0" role="region" aria-label="Our figures and DVSA's">
 <table class="data-table">
   <thead><tr><th>Measure</th><th class="num">Ours</th><th class="num">DVSA</th></tr></thead>
   <tbody>
@@ -77,7 +77,7 @@
 <p>Montag (2017) adapted the "last-digit test", first used to look for fraud in election results, to find suspicious mileages in used-car adverts. The idea: in genuine readings, the last digit is equally likely to be anything from 0 to 9. If far more readings end in 0, some were rounded or estimated rather than read.</p>
 {% if digits %}
 <p>Here is the same test on {{ total_readings }} MOT odometer readings from 2024:</p>
-<div class="table-wrap">
+<div class="table-wrap" tabindex="0" role="region" aria-label="Odometer readings by last digit">
 <table class="data-table">
   <caption>Share of readings by last digit (10% expected for each)</caption>
   <thead><tr><th>Last digit</th><th class="num">Readings</th><th class="num">Share</th><th>Compared with 10%</th></tr></thead>

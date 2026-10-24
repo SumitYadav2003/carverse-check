@@ -16,7 +16,8 @@ from .sample_data import load_sample
 
 
 def make_rate(**overrides):
-    values = dict(model_year_key="k-2016", make="FORD", model="FIESTA", first_use_year=2016,
+    values = dict(model_year_key="k-2016", make="FORD", model="FIESTA", make_slug="ford",
+                  model_slug="fiesta", first_use_year=2016,
                   test_year=2024, tests=114221, initial_fails=35728, initial_fail_rate_pct=31.28,
                   final_fail_rate_pct=25.0, initial_fail_rate_low_pct=31.01,
                   initial_fail_rate_high_pct=31.55, estimated_initial_fail_rate_pct=31.27,
@@ -86,6 +87,7 @@ class LoaderTests(TestCase):
         row = ModelYearFailRate.objects.get()
         self.assertEqual((row.make, row.first_use_year, row.test_year), ("FORD", 2015, 2024))
         self.assertEqual((row.vs_peers, row.miles_per_year_p50), ("higher", 6900))
+        self.assertEqual((row.make_slug, row.model_slug), ("ford", "fiesta"))
 
     def test_missing_warehouse_is_a_clear_error(self):
         from django.core.management.base import CommandError
@@ -143,6 +145,10 @@ class ComparisonTests(TestCase):
         make_rate(model_year_key="other", model="FOCUS")
         c = build_comparison(FIESTA_2016)
         self.assertFalse(c["found"])
+
+    def test_hyphenated_makes_are_capitalised_on_both_sides(self):
+        from .comparison import _display_name
+        self.assertEqual(_display_name("MERCEDES-BENZ A CLASS"), "Mercedes-Benz A Class")
 
     def test_plural_for_number_models(self):
         make_rate()

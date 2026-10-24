@@ -1,0 +1,62 @@
+{% extends "checker/base.html" %}
+{% block title %}{{ m.name }} MOT failure rate by year: Carverse Check{% endblock %}
+{% block meta_description %}How often {{ m.plural }} of each age failed their {{ m.test_year }} MOT, compared fairly with all cars of the same age.{% endblock %}
+{% block body_class %}page-content{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <a class="back-link" href="{% url 'checker:models_make' m.make_slug %}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m11 18-6-6 6-6"/></svg>All {{ m.make }} models</a>
+    <p class="eyebrow">EXPLORE MODELS</p>
+    <h1 class="page-title">{{ m.name }}</h1>
+    <p class="page-lead">How {{ m.plural }} of each age did at their first {{ m.test_year }} MOT attempt, from {{ m.total_tests }} tests, compared with all cars first used in the same year.</p>
+    <div class="pills">
+      {% if m.counts.higher %}<span class="pill">Failed more often than average in {{ m.counts.higher }} year{{ m.counts.higher|pluralize }}</span>{% endif %}
+      {% if m.counts.lower %}<span class="pill">Less often in {{ m.counts.lower }}</span>{% endif %}
+      {% if m.counts.within %}<span class="pill">No clear difference in {{ m.counts.within }}</span>{% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="container explore">
+  {% with c=m.chart %}{% if c %}
+  <figure class="year-chart">
+    <svg viewBox="0 0 {{ c.width }} {{ c.height }}" role="img" aria-labelledby="yc-t yc-d">
+      <title id="yc-t">{{ m.name }} failure rate by year of first use</title>
+      <desc id="yc-d">The solid line is the adjusted failure rate for {{ m.plural }} of each year, with its likely range shaded. The dashed line is all cars of the same age. The table below gives every value.</desc>
+      {% for t in c.y_ticks %}
+      <line class="funnel-grid" x1="{{ c.plot.left }}" x2="{{ c.plot.right }}" y1="{{ t.y }}" y2="{{ t.y }}"/>
+      <text class="funnel-axis" x="{{ c.plot.left|add:'-8' }}" y="{{ t.y }}" text-anchor="end" dominant-baseline="middle">{{ t.label }}</text>
+      {% endfor %}
+      {% for t in c.x_ticks %}<text class="funnel-axis" x="{{ t.x }}" y="{{ c.plot.bottom|add:'20' }}" text-anchor="middle">{{ t.label }}</text>{% endfor %}
+      <path class="yc-band" d="{{ c.band }}"/>
+      <path class="yc-peer" d="{{ c.peer }}"/>
+      <path class="yc-model" d="{{ c.model }}"/>
+      {% for p in c.points %}<circle class="dot" cx="{{ p.x }}" cy="{{ p.y }}" r="3.5"/>{% endfor %}
+    </svg>
+    <figcaption class="muted small">
+      <span class="key-this">Solid line</span>: {{ m.plural }}, adjusted failure rate, with the likely range shaded.
+      <span class="key-peer">Dashed line</span>: all cars first used in the same year. Older cars fail more often, so compare each point with the dashed line, not with the other years.
+    </figcaption>
+  </figure>
+  {% endif %}{% endwith %}
+
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Failure rate by year of first use">
+    <table class="data-table">
+      <thead><tr><th>First used</th><th class="num">Tests</th><th class="num">Failure rate</th><th class="num">All cars that age</th><th>Compared</th><th class="num">Typical miles a year</th></tr></thead>
+      <tbody>
+        {% for y in m.years %}
+        <tr>
+          <td>{{ y.year }}</td>
+          <td class="num">{{ y.tests }}</td>
+          <td class="num"><strong>{{ y.estimate }}%</strong><span class="range">{{ y.low }}–{{ y.high }}</span></td>
+          <td class="num">{{ y.peer }}%</td>
+          <td>{% if y.vs_peers == "higher" %}<span class="cmp cmp-higher">More often</span>{% elif y.vs_peers == "lower" %}<span class="cmp cmp-lower">Less often</span>{% elif y.small %}<span class="cmp">Too few tests to tell</span>{% else %}<span class="cmp">About the same</span>{% endif %}</td>
+          <td class="num">{{ y.miles|default:"–" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="muted small explore-note">Failure rate: share failing their first MOT attempt, adjusted for the number of tests, with its likely range. "More often" and "less often" need a clear gap of at least one percentage point. <a href="{% url 'checker:methodology' %}#statistics">How these are worked out</a>. This describes a model, not any one car. Source: DVSA anonymised MOT test data, {{ m.test_year }}, under the Open Government Licence v3.0.</p>
+</div>
+{% endblock %}

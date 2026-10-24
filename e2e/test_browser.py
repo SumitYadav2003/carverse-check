@@ -160,16 +160,55 @@ class BrowserTests(StaticLiveServerTestCase):
         self.assertEqual(page.evaluate("document.documentElement.dataset.theme"), "light")
         self.assertEqual(self.background(page), "rgb(246, 245, 240)")
 
+    # ---------- explore models and the seller checklist ----------
+
+    def seed_models(self):
+        fiesta = make_rate()                                     # 2016 Ford Fiesta, as SAMPLE1
+        for i, year in enumerate((2014, 2015)):
+            make_rate(model_year_key=f"fiesta-{year}", first_use_year=year, vs_peers="within",
+                      funnel_position="inside", estimated_initial_fail_rate_pct=33 - i)
+        for i in range(55):                                      # enough models for a ranking
+            make_rate(model_year_key=f"m{i}", make="VAUXHALL", make_slug="vauxhall",
+                      model=f"MODEL {i}", model_slug=f"model-{i}", tests=40 + 200 * i,
+                      estimated_initial_fail_rate_pct=15 + i * 0.3, vs_peers="within",
+                      funnel_position="inside")
+        return fiesta
+
+    def test_explore_from_search_to_a_model_page(self):
+        self.seed_models()
+        page = self.open("/models/")
+        page.fill("#model-q", "ford fiesta")
+        page.get_by_role("button", name="Search").click()
+        page.get_by_role("link", name="Ford Fiesta").first.click()
+        page.wait_for_url("**/models/ford/fiesta/")
+        expect(page.locator("h1")).to_have_text("Ford Fiesta")
+        expect(page.locator(".yc-model")).to_be_visible()
+
+    def test_ranking_year_can_be_changed(self):
+        self.seed_models()
+        page = self.open("/models/")
+        expect(page.locator("#rank-h")).to_contain_text("2016")
+        page.select_option("#rank-year", "2016")
+        page.get_by_role("button", name="Show").click()
+        expect(page.locator(".rank-table").first.locator("tbody tr")).to_have_count(10)
+
+    def test_checklist_items_can_be_ticked(self):
+        page = self.open("/report/SAMPLE3/")
+        box = page.locator("#questions input[type=checkbox]").first
+        box.check()
+        expect(box).to_be_checked()
+
     # ---------- accessibility ----------
 
     def test_no_serious_accessibility_problems(self):
         """axe-core, the engine behind most accessibility checkers, on the main pages, in
         both themes at desktop and phone widths. Fails on any 'serious' or 'critical'
         problem, listing each one."""
-        make_rate()
+        self.seed_models()
         axe = Axe()
         for path in ["/", "/report/SAMPLE3/", "/report/SAMPLE1/", "/methodology/", "/help/",
-                     "/privacy/", "/contact/", "/report/NOSUCHCAR/"]:
+                     "/privacy/", "/contact/", "/report/NOSUCHCAR/", "/models/",
+                     "/models/?q=ford", "/models/vauxhall/", "/models/ford/fiesta/"]:
             for viewport, scheme in ((DESKTOP, "dark"), (PHONE, "dark"),
                                      (DESKTOP, "light"), (PHONE, "light")):
                 with self.subTest(path=path, width=viewport["width"], theme=scheme):

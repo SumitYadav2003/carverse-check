@@ -152,6 +152,7 @@ def check_repeated_advisories(tests, min_tests=2):
                 "code": "repeated_advisory",
                 "severity": MEDIUM,
                 "title": f"Same warning at {len(entry['tests'])} MOTs",
+                "subject": normalise_defect_text(entry["text"]).capitalize(),
                 "detail": (
                     f"\"{normalise_defect_text(entry['text']).capitalize()}\" was noted at "
                     f"{len(entry['tests'])} tests between {first['date']:%b %Y} and "
@@ -172,6 +173,7 @@ def check_dangerous_defects(tests):
                 "code": "dangerous_defect",
                 "severity": HIGH,
                 "title": "Dangerous defect recorded",
+                "subject": normalise_defect_text(defect.get("text")).capitalize(),
                 "detail": (
                     f"On {test['date']:%d %b %Y} the tester recorded a dangerous defect: "
                     f"\"{normalise_defect_text(defect.get('text')).capitalize()}\". "

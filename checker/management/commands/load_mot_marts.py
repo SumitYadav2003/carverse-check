@@ -16,6 +16,7 @@ from pathlib import Path
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
+from django.utils.text import slugify
 
 from checker.models import ModelYearDefectCategory, ModelYearFailRate, OdometerRounding
 
@@ -81,8 +82,12 @@ class Command(BaseCommand):
             self.stderr.write(self.style.WARNING(
                 f"Tests span {first_year}-{last_year}; figures will be labelled {last_year}."))
 
-        rate_objects = [ModelYearFailRate(test_year=last_year, **dict(zip(RATE_COLUMNS, row)))
-                        for row in rates]
+        rate_objects = []
+        for row in rates:
+            values = dict(zip(RATE_COLUMNS, row))
+            rate_objects.append(ModelYearFailRate(
+                test_year=last_year, make_slug=slugify(values["make"])[:100],
+                model_slug=slugify(values["model"])[:100], **values))
         category_objects = []
         for row in categories:
             values = dict(zip(CATEGORY_COLUMNS, row))

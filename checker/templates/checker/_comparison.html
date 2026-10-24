@@ -97,6 +97,8 @@
   <p class="muted small">The darker band is the middle half of {{ comparison.first_use_year }} {{ comparison.plural }} ({{ m.typical_low }} to {{ m.typical_high }} miles a year); the lighter band covers 8 in 10. From {{ m.readings }} MOT readings.</p>
   {% endif %}{% endwith %}
 
+  <p><a class="text-link" href="{% url 'checker:models_model' comparison.make_slug comparison.model_slug %}">See every year of {{ comparison.plural }} →</a></p>
+
   <p class="muted small compare-note">This describes the model, not this car. Mileage and how a car has been looked after matter far more, so use it to decide what to check, not as a verdict.</p>
   {% else %}
   <p class="finding-detail">There weren't enough MOT tests of {{ comparison.first_use_year }} {{ comparison.plural }} to compare them fairly.</p>
