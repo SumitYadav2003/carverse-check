@@ -140,18 +140,41 @@ class BrowserTests(StaticLiveServerTestCase):
         expect(page.locator(".aside-actions")).to_be_hidden()
         expect(page.locator(".aside-glance")).to_be_visible()
 
+    # ---------- light and dark themes ----------
+
+    def background(self, page):
+        return page.evaluate("getComputedStyle(document.body).backgroundColor")
+
+    def test_follows_the_device_setting(self):
+        self.assertEqual(self.background(self.open("/", color_scheme="light")), "rgb(246, 245, 240)")
+        self.assertEqual(self.background(self.open("/", color_scheme="dark")), "rgb(17, 18, 16)")
+
+    def test_theme_switch_is_remembered_across_pages(self):
+        page = self.open("/", color_scheme="dark")
+        switch = page.locator("[data-theme-toggle]")
+        expect(switch).to_have_attribute("aria-label", "Switch to light theme")
+        switch.click()
+        self.assertEqual(self.background(page), "rgb(246, 245, 240)")
+        expect(switch).to_have_attribute("aria-label", "Switch to dark theme")
+        page.goto(self.live_server_url + "/help/")             # a new page load
+        self.assertEqual(page.evaluate("document.documentElement.dataset.theme"), "light")
+        self.assertEqual(self.background(page), "rgb(246, 245, 240)")
+
     # ---------- accessibility ----------
 
     def test_no_serious_accessibility_problems(self):
-        """axe-core, the engine behind most accessibility checkers, on the main pages.
-        Fails on any 'serious' or 'critical' problem, listing each one."""
+        """axe-core, the engine behind most accessibility checkers, on the main pages, in
+        both themes at desktop and phone widths. Fails on any 'serious' or 'critical'
+        problem, listing each one."""
         make_rate()
         axe = Axe()
         for path in ["/", "/report/SAMPLE3/", "/report/SAMPLE1/", "/methodology/", "/help/",
                      "/privacy/", "/contact/", "/report/NOSUCHCAR/"]:
-            for viewport in (DESKTOP, PHONE):
-                with self.subTest(path=path, width=viewport["width"]):
-                    page = self.open(path, viewport=viewport, reduced_motion="reduce")
+            for viewport, scheme in ((DESKTOP, "dark"), (PHONE, "dark"),
+                                     (DESKTOP, "light"), (PHONE, "light")):
+                with self.subTest(path=path, width=viewport["width"], theme=scheme):
+                    page = self.open(path, viewport=viewport, reduced_motion="reduce",
+                                     color_scheme=scheme)
                     results = axe.run(page)
                     problems = [f"{v['id']} ({v['impact']}): {v['help']} - "
                                 f"{[n['target'] for n in v['nodes'][:3]]}"

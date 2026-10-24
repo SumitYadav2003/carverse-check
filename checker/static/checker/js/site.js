@@ -26,6 +26,32 @@
   });
 })();
 
+// ---------- light / dark theme switch ----------
+// The device setting decides until the visitor uses the switch; their choice is then
+// kept in this browser only (localStorage) and applied before the page is drawn (base.html).
+(function () {
+  "use strict";
+  var button = document.querySelector("[data-theme-toggle]");
+  if (!button) return;
+  var root = document.documentElement;
+  var prefersLight = window.matchMedia ? window.matchMedia("(prefers-color-scheme: light)") : null;
+
+  function current() {
+    return root.getAttribute("data-theme") || (prefersLight && prefersLight.matches ? "light" : "dark");
+  }
+  function updateLabel() {
+    button.setAttribute("aria-label", "Switch to " + (current() === "dark" ? "light" : "dark") + " theme");
+  }
+  button.addEventListener("click", function () {
+    var next = current() === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch (e) {}
+    updateLabel();
+  });
+  if (prefersLight && prefersLight.addEventListener) prefersLight.addEventListener("change", updateLabel);
+  updateLabel();
+})();
+
 // ---------- report: print, copy link, "on this page" highlighting ----------
 (function () {
   "use strict";

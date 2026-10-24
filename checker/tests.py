@@ -169,3 +169,54 @@ class SitePageTests(TestCase):
         response = self.client.get("/methodology/")
         self.assertContains(response, "10,500 MOT odometer readings")
         self.assertContains(response, "digit-bar is-over")                # 0 is over-represented
+
+
+class MotStatusTests(SimpleTestCase):
+    """The MOT status line at the top of a report."""
+
+    TODAY = datetime(2026, 10, 24).date()
+
+    def status(self, *tests, first_due=None):
+        from .presenters import mot_status
+        return mot_status(list(tests), first_due, self.TODAY)
+
+    @staticmethod
+    def record(result, expiry=None):
+        return {"result": result, "expiry": datetime.fromisoformat(expiry) if expiry else None}
+
+    def test_valid_mot_counts_days_left(self):
+        s = self.status(self.record("PASSED", "2027-03-14"))
+        self.assertEqual((s["state"], s["days"]), ("valid", 141))
+        self.assertIn("valid until 14 Mar 2027", s["text"])
+
+    def test_due_within_a_month_is_flagged(self):
+        s = self.status(self.record("PASSED", "2026-11-10"))
+        self.assertEqual(s["state"], "due_soon")
+        self.assertIn("new MOT", s["note"])
+
+    def test_expired_mot(self):
+        s = self.status(self.record("PASSED", "2026-03-14"))
+        self.assertEqual((s["state"], s["days"]), ("expired", 224))
+        self.assertIn("booked MOT test", s["note"])
+
+    def test_uses_the_latest_pass_not_a_later_failure(self):
+        s = self.status(self.record("PASSED", "2027-01-05"), self.record("FAILED"))
+        self.assertEqual(s["date"], "05 Jan 2027")
+
+    def test_new_car_uses_first_due_date(self):
+        s = self.status(first_due=datetime(2027, 5, 1))
+        self.assertEqual((s["state"], s["date"]), ("first_due", "01 May 2027"))
+
+    def test_nothing_known(self):
+        self.assertIsNone(self.status())
+
+
+@override_settings(DVSA_CLIENT_ID="")
+class HeaderTests(TestCase):
+    def test_header_has_example_report_and_theme_switch(self):
+        response = self.client.get("/")
+        self.assertContains(response, 'href="/report/SAMPLE3/">Example report</a>')
+        self.assertContains(response, "data-theme-toggle")
+
+    def test_report_shows_mot_status(self):
+        self.assertContains(self.client.get("/report/SAMPLE1/"), 'class="mot-status')

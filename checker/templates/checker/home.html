@@ -33,7 +33,7 @@
 
     <div class="trust rise" style="--d:.4s">
       <span class="trust-item">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8DB8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" class="icon-ask" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>
         Official DVSA MOT history
       </span>
       <span class="trust-dot" aria-hidden="true"></span>
@@ -55,11 +55,11 @@
         </div>
         <p class="muted small">Mileage at each MOT</p>
         <svg viewBox="0 0 300 110" class="preview-chart" aria-hidden="true">
-          <line x1="0" y1="105" x2="300" y2="105" stroke="#2E322B"/>
-          <path class="draw" pathLength="1" d="M15,92 L55,76 L128,42 L165,26" fill="none" stroke="#F4C21B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M165,26 L245,19" fill="none" stroke="#F4C21B" stroke-width="2" stroke-dasharray="4 6" opacity=".6"/>
-          <path class="draw" pathLength="1" d="M245,19 L282,10" fill="none" stroke="#F4C21B" stroke-width="3" stroke-linecap="round" style="animation-delay:1.9s"/>
-          <text x="205" y="44" text-anchor="middle" font-size="10" fill="#A9A89F" font-family="IBM Plex Mono, monospace">28 months, no MOT</text>
+          <line class="svg-line" x1="0" y1="105" x2="300" y2="105"/>
+          <path pathLength="1" d="M15,92 L55,76 L128,42 L165,26" class="svg-chart draw" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M165,26 L245,19" class="svg-chart" fill="none" stroke-width="2" stroke-dasharray="4 6" opacity=".6"/>
+          <path pathLength="1" d="M245,19 L282,10" class="svg-chart draw" fill="none" stroke-width="3" stroke-linecap="round" style="animation-delay:1.9s"/>
+          <text x="205" y="44" text-anchor="middle" font-size="10" class="svg-label" font-family="IBM Plex Mono, monospace">28 months, no MOT</text>
         </svg>
         <div class="preview-finding"><span class="tag tag-serious">SERIOUS</span><span>Dangerous brake pipe corrosion recorded on 29 Sep 2023.</span></div>
       </div>

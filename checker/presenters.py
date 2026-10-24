@@ -19,6 +19,32 @@ def fmt_day(d):
     return d.strftime("%d %b %Y")
 
 
+DUE_SOON_DAYS = 30
+
+
+def mot_status(tests, first_due, today):
+    """Is the car's MOT valid today? Based on the expiry date of its latest pass; a car
+    that has never been tested uses DVSA's first-MOT due date instead. Returns None if
+    neither is known."""
+    passes = [t for t in tests if t["result"] == "PASSED" and t.get("expiry")]
+    if passes:
+        expiry = max(t["expiry"] for t in passes).date()
+        days = (expiry - today).days
+        if days < 0:
+            return {"state": "expired", "date": fmt_day(expiry), "days": -days,
+                    "text": f"MOT expired on {fmt_day(expiry)}, {-days:,} day{'s' if days != -1 else ''} ago.",
+                    "note": "It can only be driven to a booked MOT test."}
+        state = "due_soon" if days <= DUE_SOON_DAYS else "valid"
+        return {"state": state, "date": fmt_day(expiry), "days": days,
+                "text": f"MOT valid until {fmt_day(expiry)}, {days:,} day{'s' if days != 1 else ''} from now.",
+                "note": "Ask whether it will have a new MOT before you buy." if state == "due_soon" else ""}
+    if first_due:
+        due = first_due.date()
+        return {"state": "first_due", "date": fmt_day(due), "days": (due - today).days,
+                "text": f"First MOT due by {fmt_day(due)}.", "note": ""}
+    return None
+
+
 def evidence_chips(finding):
     items = finding["evidence"]
     chips = []
@@ -124,7 +150,7 @@ def mileage_chart(tests):
     }
 
 
-def present(report, source):
+def present(report, source, today=None):
     findings = []
     for i, f in enumerate(report["findings"]):
         findings.append({**f, "serious": f["severity"] == HIGH, "chips": evidence_chips(f),
@@ -155,6 +181,7 @@ def present(report, source):
         },
         "chart": mileage_chart(report["tests"]),
         "timeline": timeline(report["tests"]),
+        "mot_status": mot_status(report["tests"], v.get("mot_due"), today or date.today()),
         "last_test": ({"date": fmt_day(report["tests"][-1]["date"]),
                        "passed": report["tests"][-1]["result"] == "PASSED"}
                       if report["tests"] else None),

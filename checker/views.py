@@ -3,6 +3,7 @@ import re
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.cache import cache_control
 
 from .analysis import build_report
@@ -89,6 +90,6 @@ def report(request, registration):
     if vehicle is None:
         return render(request, "checker/not_found.html", {"plate": plate}, status=404)
     report = build_report(vehicle)
-    context = present(report, source)
+    context = present(report, source, today=timezone.localdate())
     context["comparison"] = build_comparison(report["vehicle"], report["summary"])
     return render(request, "checker/report.html", context)

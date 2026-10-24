@@ -15,7 +15,7 @@
   </p>
   {% elif is_live %}
   <p class="sample-note live-note">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8DB8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>
+    <svg width="16" height="16" viewBox="0 0 24 24" class="icon-ask" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>
     Live data from the DVSA MOT history service.
   </p>
   {% endif %}
@@ -28,6 +28,12 @@
       {% if vehicle.fuel_type %}<span class="pill">{{ vehicle.fuel_type }}{% if vehicle.engine_size %} · {{ vehicle.engine_size }} cc{% endif %}</span>{% endif %}
       {% if vehicle.colour %}<span class="pill">{{ vehicle.colour }}</span>{% endif %}
     </div>
+    {% if mot_status %}
+    <p class="mot-status mot-{{ mot_status.state }}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{% if mot_status.state == "expired" %}<circle cx="12" cy="12" r="9"/><path d="M12 7v6"/><path d="M12 16.5h.01"/>{% else %}<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>{% endif %}</svg>
+      <span><strong>{{ mot_status.text }}</strong>{% if mot_status.note %} {{ mot_status.note }}{% endif %}</span>
+    </p>
+    {% endif %}
   </section>
 
   <div class="report-grid">
@@ -82,8 +88,8 @@
   <section class="card rise" id="mileage" style="--d:.5s" aria-labelledby="chart-h">
     <h2 id="chart-h" class="section-title">Mileage over time</h2>
     <svg class="chart" viewBox="0 0 {{ chart.width }} {{ chart.height }}" role="img" aria-label="{{ chart.description }}">
-      <line x1="{{ chart.left }}" y1="{{ chart.baseline }}" x2="{{ chart.right }}" y2="{{ chart.baseline }}" stroke="#2E322B"/>
-      <line x1="{{ chart.left }}" y1="{{ chart.top }}" x2="{{ chart.right }}" y2="{{ chart.top }}" stroke="#22251F" stroke-dasharray="3 5"/>
+      <line x1="{{ chart.left }}" y1="{{ chart.baseline }}" x2="{{ chart.right }}" y2="{{ chart.baseline }}" class="svg-line"/>
+      <line x1="{{ chart.left }}" y1="{{ chart.top }}" x2="{{ chart.right }}" y2="{{ chart.top }}" class="svg-line-faint" stroke-dasharray="3 5"/>
       <text x="{{ chart.right }}" y="{{ chart.top|add:12 }}" text-anchor="end" class="chart-label">{{ chart.top_label }}</text>
       <text x="{{ chart.right }}" y="{{ chart.baseline|add:-6 }}" text-anchor="end" class="chart-label">{{ chart.bottom_label }}</text>
       {% for s in chart.segments %}
@@ -132,7 +138,7 @@
         {% if first_used %}<div><dt>First used</dt><dd>{{ first_used }}</dd></div>{% endif %}
         {% if vehicle.fuel_type %}<div><dt>Fuel</dt><dd>{{ vehicle.fuel_type|title }}</dd></div>{% endif %}
         {% if last_test %}<div><dt>Last MOT</dt><dd>{{ last_test.date }} · <span class="{% if last_test.passed %}is-pass{% else %}is-fail{% endif %}">{% if last_test.passed %}Pass{% else %}Fail{% endif %}</span></dd></div>{% endif %}
-        {% if mot_due %}<div><dt>MOT due</dt><dd>{{ mot_due }}</dd></div>{% endif %}
+        {% if mot_status %}<div><dt>{% if mot_status.state == "expired" %}MOT expired{% elif mot_status.state == "first_due" %}First MOT due{% else %}MOT valid until{% endif %}</dt><dd class="{% if mot_status.state == 'expired' %}is-fail{% endif %}">{{ mot_status.date }}</dd></div>{% endif %}
         {% if stats.latest_miles %}<div><dt>Mileage</dt><dd>{{ stats.latest_miles }}</dd></div>{% endif %}
       </dl>
     </div>
