@@ -83,10 +83,17 @@ Every push runs four GitHub Actions jobs:
 
 | Job | What it does |
 |---|---|
-| Django tests | 87 unit tests, migration check, Django's production deployment check |
+| Django tests | 100 unit tests, run against Postgres as on the live site, plus a migration check and Django's production deployment check |
 | Pipeline | Generates sample data with the same quirks as the real files, runs the Prefect flow, then runs it again and requires it to skip everything |
 | Browser tests | 17 Playwright tests in Chromium, including axe accessibility checks on 12 pages |
 | Lighthouse | Runs the site with production settings under gunicorn and fails below 95 for accessibility or 90 for best practices. The latest run scored 98 to 100 on every page tested |
+
+## Running the live site
+
+- **Lookup limits.** Each real plate costs a call to DVSA's API, which has a quota. One visitor can check 20 plates a minute, and the whole site makes at most 300 DVSA calls a minute, so a script can't use up the quota. The demo cars aren't limited.
+- **Logs.** DVSA failures, slow answers and limits being hit are logged to the console, which Render keeps. These messages never include plates, IP addresses or credentials.
+- **Error emails.** Unexpected errors (500s) are emailed to me. "DVSA is down" pages are logged but not emailed, so an outage doesn't fill my inbox.
+- **Health check.** `/healthz` answers without touching the database, so Render's frequent checks don't keep Neon's free database awake.
 
 ## Tech
 
@@ -138,7 +145,7 @@ python manage.py test e2e                       # browser tests
 ## Project layout
 
 ```
-checker/          Django app: checks, comparison, checklist, explore pages, DVSA client
+checker/          Django app: checks, comparison, checklist, explore pages, DVSA client, limits
 config/           Django settings
 e2e/              Playwright browser tests
 orchestration/    Prefect flow
@@ -148,7 +155,7 @@ transform/        dbt project: staging, intermediate, marts, tests, seed
 
 ## Data and licence
 
-MOT data is from the Driver and Vehicle Standards Agency and contains public sector information licensed under the [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/). This project isn't affiliated with or endorsed by DVSA. The figures describe models, not individual cars, and aren't advice to buy or avoid any vehicle.
+MOT data is from the Driver and Vehicle Standards Agency and contains public sector information licensed under the [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/). The code is under the MIT licence (see `LICENSE`). This project isn't affiliated with or endorsed by DVSA. The figures describe models, not individual cars, and aren't advice to buy or avoid any vehicle.
 
 ## Author
 

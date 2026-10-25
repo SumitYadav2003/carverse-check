@@ -1,0 +1,15 @@
+{% extends "checker/base.html" %}
+{% block title %}Too many checks: Carverse Check{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block content %}
+<div class="container narrow">
+  <section class="card rise">
+    <span class="plate-chip plate-chip-lg">{{ plate }}</span>
+    <h1 class="car-title">That's a lot of checks in one minute</h1>
+    <p class="finding-detail">There's a limit on how many cars one person can check a minute, so the free DVSA service keeps working for everyone. Wait a minute, then try again.</p>
+    <a class="btn-primary btn-block" href="{% url 'checker:report' plate %}">Try again</a>
+    <p class="finding-detail">Meanwhile, the demo cars still work:
+      <a href="{% url 'checker:report' 'SAMPLE1' %}">SAMPLE1</a>, <a href="{% url 'checker:report' 'SAMPLE2' %}">SAMPLE2</a> or <a href="{% url 'checker:report' 'SAMPLE3' %}">SAMPLE3</a>.</p>
+  </section>
+</div>
+{% endblock %}

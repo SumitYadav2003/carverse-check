@@ -69,12 +69,12 @@ class ClientTests(TestCase):
 
     def test_rate_limited_is_unavailable(self):
         with mock.patch.object(dvsa, "_send", side_effect=[TOKEN, (429, {"errorCode": "MOTH-RL-02"})]):
-            with self.assertRaises(dvsa.DvsaUnavailable):
+            with self.assertRaises(dvsa.DvsaUnavailable), self.assertLogs("checker.dvsa", "WARNING"):
                 dvsa.get_vehicle("AB12CDE")
 
     def test_failed_token_request_is_unavailable(self):
         with mock.patch.object(dvsa, "_send", side_effect=[(400, {"error": "invalid_client"})]):
-            with self.assertRaises(dvsa.DvsaUnavailable):
+            with self.assertRaises(dvsa.DvsaUnavailable), self.assertLogs("checker.dvsa", "ERROR"):
                 dvsa.get_vehicle("AB12CDE")
 
 
@@ -97,7 +97,8 @@ class LivePageTests(TestCase):
 
     def test_dvsa_down_shows_friendly_page(self):
         with mock.patch.object(dvsa, "_send", side_effect=dvsa.DvsaUnavailable("network")):
-            response = self.client.get("/report/AB12CDE/")
+            with self.assertLogs("django.request", "ERROR"):   # logged, but not emailed (tests_ops)
+                response = self.client.get("/report/AB12CDE/")
         self.assertEqual(response.status_code, 503)
         self.assertContains(response, "couldn't reach DVSA", status_code=503)
 

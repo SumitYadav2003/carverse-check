@@ -9,11 +9,22 @@ jobs:
   web:
     name: Django tests
     runs-on: ubuntu-latest
+    # A real Postgres, as on the live site (Neon), instead of SQLite
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: carverse
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       DJANGO_SECRET_KEY: ci-only-not-a-real-secret
       # Development settings for the tests (no HTTPS redirect); Django's test runner turns
       # debug off during tests anyway. Production settings are checked separately below.
       DJANGO_DEBUG: "1"
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/carverse
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -36,9 +47,21 @@ jobs:
   pipeline:
     name: Pipeline (Prefect flow - ingest, dbt, publish) on sample data
     runs-on: ubuntu-latest
+    # A real Postgres, so publishing the marts is tested the way it works with Neon
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: carverse
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       DJANGO_SECRET_KEY: ci-only-not-a-real-secret
       DJANGO_DEBUG: "0"
+      # The marts are published into Postgres, as they will be into Neon
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/carverse
       # CI builds its own small warehouse from generated sample data, never the real one
       MOT_WAREHOUSE: ${{ github.workspace }}/data/warehouse/ci.duckdb
       PREFECT_SERVER_ANALYTICS_ENABLED: "false"

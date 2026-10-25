@@ -1,5 +1,7 @@
+import logging
 import re
 
+from django.conf import settings
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -9,11 +11,14 @@ from django.views.decorators.cache import cache_control
 from .analysis import build_report
 from .checklist import build_checklist
 from .comparison import build_comparison
-from . import explore
+from . import explore, ratelimit
 from .presenters import present
 from .dvsa import DvsaUnavailable
 from .models import ModelYearFailRate, OdometerRounding
+from .sample_data import load_sample
 from .services import get_vehicle
+
+logger = logging.getLogger(__name__)
 
 PLATE_RE = re.compile(r"^[A-Z0-9]{1,8}$")
 
@@ -85,6 +90,11 @@ def report(request, registration):
     plate = normalise_plate(registration)
     if not PLATE_RE.match(plate):
         return render(request, "checker/not_found.html", {"plate": plate[:10]}, status=404)
+    if load_sample(plate) is None and not ratelimit.allow_lookup(request):
+        logger.warning("A visitor reached the limit of %s plate lookups a minute", settings.PLATE_LOOKUPS_PER_MINUTE)
+        response = render(request, "checker/too_many.html", {"plate": plate}, status=429)
+        response["Retry-After"] = str(ratelimit.seconds_until_reset())
+        return response
     try:
         vehicle, source = get_vehicle(plate)
     except DvsaUnavailable:

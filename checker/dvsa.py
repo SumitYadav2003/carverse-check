@@ -9,10 +9,12 @@ DVSA asks for the token to be cached, so it is kept until shortly before it expi
 
 Each vehicle's answer is also cached for an hour, so refreshing a report page doesn't spend
 more of the daily quota. Credentials come from settings (loaded from .env) and are never
-logged or shown.
+logged or shown. Nor are plates: the log says what happened, not which car was asked about.
 """
 
 import json
+import logging
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -20,11 +22,16 @@ import urllib.request
 from django.conf import settings
 from django.core.cache import cache
 
+from . import ratelimit
+
+logger = logging.getLogger(__name__)
+
 API_URL = "https://history.mot.api.gov.uk/v1/trade/vehicles/registration/{}"
 TOKEN_CACHE_KEY = "dvsa:access_token"
 VEHICLE_CACHE_SECONDS = 60 * 60
 TOKEN_SAFETY_MARGIN_SECONDS = 120
 TIMEOUT_SECONDS = 10
+SLOW_SECONDS = 3
 
 
 class DvsaNotConfigured(Exception):
@@ -67,6 +74,7 @@ def _send(request):
             body = None
         return exc.code, body
     except (urllib.error.URLError, TimeoutError, ValueError) as exc:
+        logger.warning("Couldn't reach DVSA (%s)", type(exc).__name__)
         raise DvsaUnavailable("network") from exc
 
 
@@ -86,6 +94,8 @@ def get_access_token(force_refresh=False):
                                      headers={"Content-Type": "application/x-www-form-urlencoded"})
     status, body = _send(request)
     if status != 200 or not body or "access_token" not in body:
+        # Usually means the credentials have expired or been revoked: worth knowing about.
+        logger.error("DVSA refused our token request (HTTP %s). Check the DVSA_* credentials.", status)
         raise DvsaUnavailable(f"token request failed ({status})")
     lifetime = int(body.get("expires_in", 3599)) - TOKEN_SAFETY_MARGIN_SECONDS
     cache.set(TOKEN_CACHE_KEY, body["access_token"], max(lifetime, 60))
@@ -100,7 +110,14 @@ def _lookup(registration, token):
         "X-API-Key": cfg["DVSA_API_KEY"],
         "Accept": "application/json",
     })
-    return _send(request)
+    started = time.monotonic()
+    status, body = _send(request)
+    elapsed_ms = (time.monotonic() - started) * 1000
+    if elapsed_ms > SLOW_SECONDS * 1000:
+        logger.warning("Slow DVSA lookup: HTTP %s in %.0f ms", status, elapsed_ms)
+    else:
+        logger.debug("DVSA lookup: HTTP %s in %.0f ms", status, elapsed_ms)
+    return status, body
 
 
 def get_vehicle(registration):
@@ -109,6 +126,10 @@ def get_vehicle(registration):
     cached = cache.get(cache_key)
     if cached is not None:
         return cached
+
+    if not ratelimit.allow_dvsa_call():
+        logger.warning("Site-wide limit of %s DVSA calls a minute reached", settings.DVSA_CALLS_PER_MINUTE)
+        raise DvsaUnavailable("site-wide limit reached")
 
     status, body = _lookup(registration, get_access_token())
     if status in (401, 403):
@@ -121,5 +142,7 @@ def get_vehicle(registration):
     if status in (400, 404):
         raise VehicleNotFound(registration)
     if status == 429:
+        logger.warning("DVSA says we're sending too many requests (HTTP 429)")
         raise DvsaUnavailable("rate limited")
+    logger.warning("Unexpected answer from DVSA (HTTP %s)", status)
     raise DvsaUnavailable(f"unexpected response ({status})")

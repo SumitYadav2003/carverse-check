@@ -41,11 +41,13 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    "whitenoise.runserver_nostatic",   # local server: let WhiteNoise serve CSS/JS so the browser always gets the latest version
     "django.contrib.staticfiles",
     "checker",
 ]
 
 MIDDLEWARE = [
+    "checker.middleware.HealthCheckMiddleware",     # answers /healthz first (see the class for why)
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",   # serves CSS/JS on Render
     # Compresses pages (CSS/JS are already compressed by WhiteNoise). The public pages hold
@@ -119,6 +121,62 @@ STORAGES = {
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# Django's default cache: each server process's own memory. DVSA's answers and the rate-limit
+# counts live here, which keeps the privacy notice's promise that plates are only held in
+# memory, never written to a database.
+CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+
+
+# --- Logging and error emails -----------------------------------------------------------
+# Everything goes to the console, which is what Render's log page shows. Unexpected errors
+# (500s) are also emailed when DJANGO_ADMIN_EMAIL and the EMAIL_* settings are set.
+# "DVSA is down" pages (503) are logged but not emailed, to avoid a flood of identical emails.
+
+LOG_LEVEL = os.environ.get("DJANGO_LOG_LEVEL", "INFO")
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {
+        "require_debug_false": {"()": "django.utils.log.RequireDebugFalse"},
+        "skip_unavailable": {
+            "()": "django.utils.log.CallbackFilter",
+            "callback": lambda record: getattr(record, "status_code", None) != 503,
+        },
+    },
+    "formatters": {
+        "plain": {"format": "{levelname} {name}: {message}", "style": "{"},
+    },
+    "handlers": {
+        "console": {"class": "logging.StreamHandler", "formatter": "plain"},
+        "mail_admins": {
+            "class": "django.utils.log.AdminEmailHandler",
+            "level": "ERROR",
+            "filters": ["require_debug_false", "skip_unavailable"],
+        },
+        "null": {"class": "logging.NullHandler"},
+    },
+    "loggers": {
+        "django": {"handlers": ["console", "mail_admins"], "level": "ERROR", "propagate": False},
+        # Bots constantly send requests for other sites' host names. Django rejects them;
+        # logging each one would bury the real problems.
+        "django.security.DisallowedHost": {"handlers": ["null"], "propagate": False},
+        "checker": {"handlers": ["console"], "level": LOG_LEVEL, "propagate": False},
+    },
+}
+
+ADMIN_EMAIL = os.environ.get("DJANGO_ADMIN_EMAIL", "")
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
+if ADMIN_EMAIL and EMAIL_HOST:
+    ADMINS = [ADMIN_EMAIL]
+    EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
+    EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+    EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+    EMAIL_USE_TLS = True
+    EMAIL_TIMEOUT = 10
+    SERVER_EMAIL = os.environ.get("EMAIL_FROM", EMAIL_HOST_USER)
+    EMAIL_SUBJECT_PREFIX = "[Carverse Check] "
+
 
 # --- Security on the live site ----------------------------------------------------------
 # Render terminates HTTPS and tells Django through the X-Forwarded-Proto header.
@@ -150,3 +208,8 @@ DVSA_CLIENT_SECRET = os.environ.get("DVSA_CLIENT_SECRET", "")
 DVSA_API_KEY = os.environ.get("DVSA_API_KEY", "")
 DVSA_SCOPE = os.environ.get("DVSA_SCOPE", "")
 DVSA_TOKEN_URL = os.environ.get("DVSA_TOKEN_URL", "")
+
+# Limits that protect the DVSA quota (see checker/ratelimit.py). Keep the site-wide one
+# below the request rate in DVSA's approval email.
+PLATE_LOOKUPS_PER_MINUTE = int(os.environ.get("PLATE_LOOKUPS_PER_MINUTE", "20"))
+DVSA_CALLS_PER_MINUTE = int(os.environ.get("DVSA_CALLS_PER_MINUTE", "300"))
