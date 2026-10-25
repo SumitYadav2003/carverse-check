@@ -12,6 +12,7 @@ more of the daily quota. Credentials come from settings (loaded from .env) and a
 logged or shown. Nor are plates: the log says what happened, not which car was asked about.
 """
 
+import http.client
 import json
 import logging
 import time
@@ -62,6 +63,17 @@ def is_configured():
         return False
 
 
+def _badly_pasted_settings():
+    """Names of DVSA settings with line breaks, tabs or spaces at either end.
+
+    Easy to do by accident when copying values from .env into a hosting dashboard, and
+    otherwise only shows up as a confusing failure when the first real plate is checked.
+    """
+    names = ["DVSA_CLIENT_ID", "DVSA_CLIENT_SECRET", "DVSA_API_KEY", "DVSA_SCOPE", "DVSA_TOKEN_URL"]
+    return [n for n in names
+            if (value := getattr(settings, n, "")) != value.strip() or any(c in value for c in "\r\n\t")]
+
+
 def _send(request):
     """Send a request; return (status, parsed JSON or None). Network failures raise DvsaUnavailable."""
     try:
@@ -73,7 +85,9 @@ def _send(request):
         except (ValueError, UnicodeDecodeError):
             body = None
         return exc.code, body
-    except (urllib.error.URLError, TimeoutError, ValueError) as exc:
+    # OSError covers network problems (URLError, timeouts, dropped connections) and
+    # HTTPException covers malformed requests or replies. Either way DVSA can't answer.
+    except (OSError, http.client.HTTPException, ValueError) as exc:
         logger.warning("Couldn't reach DVSA (%s)", type(exc).__name__)
         raise DvsaUnavailable("network") from exc
 
@@ -130,6 +144,11 @@ def get_vehicle(registration):
     if not ratelimit.allow_dvsa_call():
         logger.warning("Site-wide limit of %s DVSA calls a minute reached", settings.DVSA_CALLS_PER_MINUTE)
         raise DvsaUnavailable("site-wide limit reached")
+
+    if bad := _badly_pasted_settings():
+        logger.error("These settings contain a line break or extra spaces, so DVSA can't be "
+                     "contacted: %s. Fix them in the environment variables.", ", ".join(bad))
+        raise DvsaUnavailable("badly pasted settings")
 
     status, body = _lookup(registration, get_access_token())
     if status in (401, 403):

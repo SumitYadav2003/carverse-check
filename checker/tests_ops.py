@@ -1,6 +1,7 @@
 """Tests for running the live site: health check, lookup limits, logging and error emails."""
 
 import logging
+import http.client
 from unittest import mock
 
 from django.core import mail
@@ -126,3 +127,35 @@ class ErrorEmailTests(TestCase):
             response = self.client.get("/report/AB12CDE/")
         self.assertEqual(response.status_code, 503)
         self.assertEqual(mail.outbox, [])
+
+
+@override_settings(**FAKE_SETTINGS)
+class ConfigurationMistakeTests(TestCase):
+    """The live site once had DVSA_TOKEN_URL pasted with the next line of .env attached."""
+
+    def setUp(self):
+        cache.clear()
+
+    @override_settings(DVSA_TOKEN_URL="https://login.example/token\nDJANGO_DEBUG=1")
+    def test_a_line_break_in_a_setting_shows_the_try_again_page(self):
+        with mock.patch.object(dvsa, "_send") as send:
+            with self.assertLogs("checker.dvsa", "ERROR") as logs, self.assertLogs("django.request", "ERROR"):
+                response = self.client.get("/report/AB12CDE/")
+        self.assertEqual(response.status_code, 503)
+        send.assert_not_called()
+        self.assertIn("DVSA_TOKEN_URL", logs.output[0])
+        self.assertNotIn("login.example", logs.output[0])     # names the setting, never its value
+
+    @override_settings(DVSA_API_KEY=" key")
+    def test_spaces_at_either_end_are_caught_too(self):
+        with self.assertLogs("checker.dvsa", "ERROR"), self.assertRaises(dvsa.DvsaUnavailable):
+            dvsa.get_vehicle("AB12CDE")
+
+    def test_odd_network_failures_are_treated_as_dvsa_unavailable(self):
+        for failure in [http.client.InvalidURL("bad"), http.client.RemoteDisconnected("gone"),
+                        ConnectionResetError(), http.client.IncompleteRead(b"")]:
+            cache.clear()
+            with self.subTest(failure=type(failure).__name__):
+                with mock.patch("urllib.request.urlopen", side_effect=failure):
+                    with self.assertLogs("checker.dvsa", "WARNING"), self.assertRaises(dvsa.DvsaUnavailable):
+                        dvsa.get_vehicle("AB12CDE")
