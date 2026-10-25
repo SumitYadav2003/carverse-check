@@ -108,7 +108,8 @@ class ChecklistTests(SimpleTestCase):
         self.assertIn("was noted at 3 MOTs", texts)
         self.assertIn("SORN", texts)
         self.assertEqual(checklist["from_model"], [])               # no comparison, no model items
-        self.assertEqual(len(checklist["for_any_car"]), 3)
+        self.assertEqual(len(checklist["for_any_car"]), 4)
+        self.assertIn("previous keepers", " ".join(checklist["for_any_car"]))
 
     def test_latest_advisory_linked_to_a_model_weak_spot(self):
         vehicle = {"firstUsedDate": "2016-03-15", "make": "FORD", "model": "FIESTA", "motTests": [

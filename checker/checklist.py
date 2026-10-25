@@ -49,6 +49,9 @@ PRACTICAL_CHECKS = [
 
 FOR_ANY_CAR = [
     "Can I see the V5C logbook? The keeper's name and address should match the seller's, and the VIN on it should match the car.",
+    # The keeper count isn't in any free data source (MOT data has none, and DVLA's public
+    # API doesn't include it), but it's printed on the V5C itself.
+    "How many previous keepers does the V5C show? Does it match what the seller told you?",
     "Is there any outstanding finance on the car? A paid history check can confirm it.",
     "Can I see the service history, and receipts for any recent work?",
 ]
