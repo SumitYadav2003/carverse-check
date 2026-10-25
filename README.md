@@ -85,7 +85,7 @@ Every push runs four GitHub Actions jobs:
 |---|---|
 | Django tests | 87 unit tests, migration check, Django's production deployment check |
 | Pipeline | Generates sample data with the same quirks as the real files, runs the Prefect flow, then runs it again and requires it to skip everything |
-| Browser tests | 16 Playwright tests in Chromium, including axe accessibility checks on 12 pages |
+| Browser tests | 17 Playwright tests in Chromium, including axe accessibility checks on 12 pages |
 | Lighthouse | Runs the site with production settings under gunicorn and fails below 95 for accessibility or 90 for best practices. The latest run scored 98 to 100 on every page tested |
 
 ## Tech

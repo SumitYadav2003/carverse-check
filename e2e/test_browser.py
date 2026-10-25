@@ -204,6 +204,17 @@ class BrowserTests(StaticLiveServerTestCase):
         box.check()
         expect(box).to_be_checked()
 
+    def test_ticked_questions_keep_their_tick_when_printed(self):
+        page = self.open("/report/SAMPLE3/")
+        boxes = page.locator("#questions input[type=checkbox]")
+        boxes.nth(0).check()
+        page.emulate_media(media="print")
+        ticked, unticked = boxes.nth(0), boxes.nth(1)
+        self.assertIn("svg", ticked.evaluate("el => getComputedStyle(el).backgroundImage"))
+        self.assertEqual(unticked.evaluate("el => getComputedStyle(el).backgroundImage"), "none")
+        text = ticked.locator("xpath=following-sibling::span")
+        self.assertEqual(text.evaluate("el => getComputedStyle(el).textDecorationLine"), "none")
+
     # ---------- accessibility ----------
 
     def test_no_serious_accessibility_problems(self):

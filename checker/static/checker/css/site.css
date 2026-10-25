@@ -790,11 +790,18 @@ main:focus { outline: none; }
 .checklist-list input {
   flex-shrink: 0; width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--chart); cursor: pointer;
 }
-.checklist-list input:checked + span { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--faint); }
+/* A tick means "I want to ask this", so ticked questions stand out rather than fade. */
+.checklist-list input:checked + span { color: var(--text); }
 .checklist-list label.is-serious span::before { content: "Serious · "; color: var(--serious); font-weight: 600; }
 .checklist-list label.is-linked span::before { content: "Worth checking · "; color: var(--ask); font-weight: 600; }
 @media print {
   .checklist-list input { appearance: none; -webkit-appearance: none; border: 1.5px solid #333; border-radius: 3px; }
+  /* Draw the tick as an image so it prints even with "background graphics" turned off. */
+  .checklist-list input:checked {
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='%23111' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 100% no-repeat;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .checklist-list input:checked + span { color: #000; font-weight: 600; }
 }
 
 /* ---------- where the model sits among models of its age ---------- */
