@@ -143,6 +143,66 @@ def funnel_plot(row):
     }
 
 
+# ---------- where the model sits among models of its age ----------
+
+def _quantile(sorted_values, q):
+    """Linear-interpolated quantile of an already sorted list."""
+    pos = (len(sorted_values) - 1) * q
+    lo = int(pos)
+    hi = min(lo + 1, len(sorted_values) - 1)
+    return sorted_values[lo] + (sorted_values[hi] - sorted_values[lo]) * (pos - lo)
+
+
+def position_among_models(row):
+    """A plain-English answer to "how does this model compare with other models of its
+    age?", plus positions for a simple scale. Uses the adjusted estimates, as the Explore
+    rankings do, so a model with a handful of tests can't land at either end by luck.
+    Returns None if there are too few models of that age to compare with."""
+    others = list(ModelYearFailRate.objects.filter(first_use_year=row.first_use_year)
+                  .exclude(pk=row.pk).values_list("estimated_initial_fail_rate_pct", flat=True))
+    if len(others) < 4:
+        return None
+    est = row.estimated_initial_fail_rate_pct
+    share_below = sum(v < est for v in others) / len(others)       # models that fail less often
+    in_ten = round(share_below * 10)
+    if in_ten >= 10:
+        headline = "Fails more often than almost every other model"
+    elif in_ten <= 0:
+        headline = "Fails less often than almost every other model"
+    elif in_ten > 5:
+        headline = f"Fails more often than {in_ten} in 10 other models"
+    elif in_ten < 5:
+        headline = f"Fails less often than {10 - in_ten} in 10 other models"
+    else:
+        headline = "Right in the middle of other models"
+
+    values = sorted(others + [est])
+    p10, p90 = _quantile(values, 0.10), _quantile(values, 0.90)
+    peer = row.peer_initial_fail_rate_pct
+    top = min(100, (int(max(_quantile(values, 0.98), est, peer)) // 10 + 1) * 10)
+
+    def pos(v):
+        return round(100 * min(max(v, 0), top) / top, 1)
+
+    return {
+        "headline": headline,
+        "models": len(values),
+        "estimate": round(est, 1),
+        "peer": round(peer, 1),
+        "band_from": round(p10, 1), "band_to": round(p90, 1),
+        "top": top,
+        "pos": {"this": pos(est), "peer": pos(peer), "band_left": pos(p10),
+                "band_width": round(pos(p90) - pos(p10), 1)},
+        "ticks": [{"label": f"{v}%", "pos": pos(v)} for v in range(0, top + 1, 10)],
+        # keep each label inside the scale when its marker is near either end
+        "align": {"this": _label_align(pos(est)), "peer": _label_align(pos(peer))},
+    }
+
+
+def _label_align(position):
+    return "start" if position < 18 else "end" if position > 82 else "middle"
+
+
 # ---------- mileage ----------
 
 def mileage_comparison(row, miles_per_year, label):
@@ -203,7 +263,12 @@ def build_comparison(vehicle, summary=None):
         return None   # marts not loaded yet (load_mot_marts): hide the section, don't mislead
     row = find_model_year(vehicle.get("make"), vehicle.get("model"), first_used)
     if row is None:
-        return {**base, "found": False}
+        # Too new, or just too few tests? Cars first used after the youngest group in the
+        # data hadn't reached their first MOT, so there's nothing of that age to compare.
+        youngest = ModelYearFailRate.objects.order_by("-first_use_year").values_list(
+            "first_use_year", flat=True).first()
+        too_new = bool(first_used and youngest and first_used.year > youngest)
+        return {**base, "found": False, "too_new": too_new}
 
     verdict = VERDICTS.get(row.vs_peers, VERDICTS["within"])
     if row.vs_peers == "within" and row.tests < SMALL_GROUP_TESTS:
@@ -235,6 +300,7 @@ def build_comparison(vehicle, summary=None):
         # every category this model clearly fails on more often (used by the seller checklist)
         "weak_spots": [c.defect_category for c in all_categories if clearly_higher(c)],
         "make_slug": row.make_slug, "model_slug": row.model_slug,
+        "position": position_among_models(row),
         "funnel": funnel_plot(row),
         "mileage": mileage_comparison(row, (summary or {}).get("miles_per_year_since_new"), label),
     }

@@ -796,3 +796,35 @@ main:focus { outline: none; }
 @media print {
   .checklist-list input { appearance: none; -webkit-appearance: none; border: 1.5px solid #333; border-radius: 3px; }
 }
+
+/* ---------- where the model sits among models of its age ---------- */
+.position { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+.position-lead { font-size: 16px; color: var(--text-2); }
+.position-lead strong { color: var(--text); }
+.position-scale { padding: 34px 0 6px; }
+.position-track { position: relative; height: 12px; border-radius: 6px; background: var(--surface-2); margin-bottom: 30px; }
+.position-band { position: absolute; top: 0; bottom: 0; border-radius: 6px; background: var(--neutral); opacity: .55; }
+.position-peer { position: absolute; top: -6px; bottom: -6px; width: 0; border-left: 2px dashed var(--text-2); }
+.position-this {
+  position: absolute; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%;
+  background: var(--plate); border: 3px solid var(--dot-ring); animation: pop .5s .6s var(--ease) both;
+}
+.position-this-label, .position-peer-label {
+  position: absolute; white-space: nowrap; font-size: 13px; line-height: 1.2;
+}
+.position-this-label { bottom: calc(100% + 8px); font-weight: 600; color: var(--text); }
+.position-peer-label { top: calc(100% + 6px); color: var(--muted); }
+.align-middle .position-this-label { left: 50%; transform: translateX(-50%); }
+.align-start .position-this-label { left: -2px; }
+.align-end .position-this-label { right: -2px; }
+.position-peer.align-middle .position-peer-label { left: 0; transform: translateX(-50%); }
+.position-peer.align-start .position-peer-label { left: -2px; }
+.position-peer.align-end .position-peer-label { right: 0; }
+.position-ticks { position: relative; height: 16px; font-family: var(--mono); font-size: 11px; color: var(--faint); }
+.position-ticks span { position: absolute; transform: translateX(-50%); }
+.position-ticks span:first-child { transform: none; }
+.position-ticks span:last-child { transform: translateX(-100%); }
+
+.funnel-details { border-top: 1px solid var(--line); padding-top: 10px; }
+.funnel-details summary { cursor: pointer; color: var(--accent); font-weight: 600; font-size: 14px; padding: 6px 0; width: fit-content; }
+.funnel-details[open] summary { margin-bottom: 8px; }

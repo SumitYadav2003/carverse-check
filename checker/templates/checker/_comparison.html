@@ -39,7 +39,27 @@
   </p>
   {% endif %}
 
+  {% with pos=comparison.position %}{% if pos %}
+  <div class="position">
+    <p class="position-lead"><strong>{{ pos.headline }}</strong> first used in {{ comparison.first_use_year }}.</p>
+    <div class="position-scale" role="img"
+         aria-label="{{ comparison.name }}: {{ pos.estimate }}%. All {{ comparison.first_use_year }} cars: {{ pos.peer }}%. Most {{ comparison.first_use_year }} models: {{ pos.band_from }}% to {{ pos.band_to }}%.">
+      <div class="position-track">
+        <span class="position-band" style="left: {{ pos.pos.band_left }}%; width: {{ pos.pos.band_width }}%"></span>
+        <span class="position-peer align-{{ pos.align.peer }}" style="left: {{ pos.pos.peer }}%"><span class="position-peer-label">All {{ comparison.first_use_year }} cars {{ pos.peer }}%</span></span>
+        <span class="position-this align-{{ pos.align.this }}" style="left: {{ pos.pos.this }}%"><span class="position-this-label">{{ comparison.name }} {{ pos.estimate }}%</span></span>
+      </div>
+      <div class="position-ticks" aria-hidden="true">
+        {% for t in pos.ticks %}<span style="left: {{ t.pos }}%">{{ t.label }}</span>{% endfor %}
+      </div>
+    </div>
+    <p class="muted small">Share failing their first MOT attempt. The shaded band is where 8 in 10 of the {{ pos.models }} models first used in {{ comparison.first_use_year }} fall ({{ pos.band_from }}% to {{ pos.band_to }}%). Models are compared using our adjusted estimate, so one with only a few tests can't land at either end by luck.</p>
+  </div>
+  {% endif %}{% endwith %}
+
   {% with f=comparison.funnel %}{% if f %}
+  <details class="funnel-details">
+    <summary>Show the detailed chart</summary>
   <figure class="funnel">
     <svg viewBox="0 0 {{ f.width }} {{ f.height }}" role="img" aria-labelledby="funnel-t funnel-d">
       <title id="funnel-t">Failure rates of {{ f.models }} models first used in {{ comparison.first_use_year }}</title>
@@ -70,6 +90,7 @@
       The <span class="key-this">yellow dot</span> is the {{ comparison.name }}; the <span class="key-peer">dashed line</span> is all {{ comparison.first_use_year }} cars ({{ comparison.peer_rate }}%).
     </figcaption>
   </figure>
+  </details>
   {% endif %}{% endwith %}
 
   {% if comparison.categories %}
@@ -101,7 +122,11 @@
 
   <p class="muted small compare-note">This describes the model, not this car. Mileage and how a car has been looked after matter far more, so use it to decide what to check, not as a verdict.</p>
   {% else %}
+  {% if comparison.too_new %}
+  <p class="finding-detail">Cars first used in {{ comparison.first_use_year }} hadn't reached their first MOT in the data we use, so there's nothing to compare this one with yet.</p>
+  {% else %}
   <p class="finding-detail">There weren't enough MOT tests of {{ comparison.first_use_year }} {{ comparison.plural }} to compare them fairly.</p>
+  {% endif %}
   {% endif %}
 
   <p class="muted small">Source: DVSA anonymised MOT test data. Contains public sector information licensed under the Open Government Licence v3.0.</p>

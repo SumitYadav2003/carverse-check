@@ -94,9 +94,17 @@ class BrowserTests(StaticLiveServerTestCase):
                       initial_fail_rate_pct=20 + i, vs_peers="within", funnel_position="inside")
         add_category(fiesta, "Brakes", 9.0, 6.0)
         page = self.open("/report/SAMPLE1/")
-        dot = page.locator(".funnel-this")
-        expect(dot).to_be_visible()
+        # the simple scale is what people see first
+        marker = page.locator(".position-this")
+        expect(marker).to_be_visible()
+        expect(page.locator(".position-lead")).to_contain_text("first used in 2016")
         # the bug where the chart showed up black and white: the stylesheet must apply
+        self.assertEqual(marker.evaluate("el => getComputedStyle(el).backgroundColor"), PLATE_YELLOW)
+        # the detailed funnel chart stays available, one click away
+        dot = page.locator(".funnel-this")
+        expect(dot).to_be_hidden()
+        page.get_by_text("Show the detailed chart").click()
+        expect(dot).to_be_visible()
         self.assertEqual(dot.evaluate("el => getComputedStyle(el).fill"), PLATE_YELLOW)
         bar = page.locator(".bar-model")
         self.assertEqual(bar.evaluate("el => getComputedStyle(el).backgroundColor"), PLATE_YELLOW)

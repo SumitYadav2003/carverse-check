@@ -145,6 +145,12 @@ class ComparisonTests(TestCase):
         make_rate(model_year_key="other", model="FOCUS")
         c = build_comparison(FIESTA_2016)
         self.assertFalse(c["found"])
+        self.assertFalse(c["too_new"])                       # 2016 cars exist, just not this one
+
+    def test_cars_newer_than_any_group_are_too_new_to_compare(self):
+        make_rate()                                          # youngest group: 2016
+        c = build_comparison({**FIESTA_2016, "first_used": datetime(2024, 5, 1)})
+        self.assertTrue(c["too_new"])
 
     def test_hyphenated_makes_are_capitalised_on_both_sides(self):
         from .comparison import _display_name
@@ -169,6 +175,33 @@ class ComparisonTests(TestCase):
         for p in f["points"] + [f["this"]]:
             self.assertTrue(f["plot"]["left"] <= p["x"] <= f["plot"]["right"])
             self.assertTrue(f["plot"]["top"] <= p["y"] <= f["plot"]["bottom"])
+
+
+class PositionAmongModelsTests(TestCase):
+    def setUp(self):
+        self.fiesta = make_rate(estimated_initial_fail_rate_pct=31.0)
+        for i in range(9):                         # nine other 2016 models, 20% to 28%
+            make_rate(model_year_key=f"m{i}", model=f"MODEL {i}", model_slug=f"model-{i}",
+                      estimated_initial_fail_rate_pct=20 + i)
+
+    def test_headline_counts_models_that_fail_less_often(self):
+        pos = build_comparison(FIESTA_2016)["position"]
+        self.assertEqual(pos["headline"], "Fails more often than almost every other model")
+        make_rate(model_year_key="worse", model="WORSE", model_slug="worse",
+                  estimated_initial_fail_rate_pct=40.0)
+        pos = build_comparison(FIESTA_2016)["position"]
+        self.assertEqual(pos["headline"], "Fails more often than 9 in 10 other models")
+
+    def test_scale_positions_stay_on_the_scale(self):
+        pos = build_comparison(FIESTA_2016)["position"]
+        for key in ("this", "peer", "band_left"):
+            self.assertTrue(0 <= pos["pos"][key] <= 100)
+        self.assertLessEqual(pos["pos"]["band_left"] + pos["pos"]["band_width"], 100.01)
+        self.assertEqual(pos["align"]["this"], "middle")
+
+    def test_needs_a_few_models_to_compare_with(self):
+        ModelYearFailRate.objects.exclude(pk=self.fiesta.pk).delete()
+        self.assertIsNone(build_comparison(FIESTA_2016)["position"])
 
 
 class MileageComparisonTests(TestCase):
