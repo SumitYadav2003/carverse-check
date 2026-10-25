@@ -103,11 +103,9 @@ class BrowserTests(StaticLiveServerTestCase):
         # the detailed funnel chart stays available, one click away
         dot = page.locator(".funnel-this")
         expect(dot).to_be_hidden()
-        page.get_by_text("Show the detailed chart").click()
+        page.get_by_text("How is this worked out?").click()
         expect(dot).to_be_visible()
         self.assertEqual(dot.evaluate("el => getComputedStyle(el).fill"), PLATE_YELLOW)
-        bar = page.locator(".bar-model")
-        self.assertEqual(bar.evaluate("el => getComputedStyle(el).backgroundColor"), PLATE_YELLOW)
 
     # ---------- phones, keyboards, printing, no JavaScript ----------
 

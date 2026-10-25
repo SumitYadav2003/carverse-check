@@ -1,4 +1,4 @@
-"""Tests for the mart loader and the "Compared with other cars like this" section."""
+"""Tests for the mart loader and the "How this model compares" section."""
 
 import tempfile
 from datetime import datetime
@@ -243,8 +243,8 @@ class ReportComparisonPageTests(TestCase):
         rate = make_rate()                         # SAMPLE1 is a 2016 Ford Fiesta
         add_category(rate, "Lamps", 9.0, 5.5)
         response = self.client.get("/report/SAMPLE1/")
-        self.assertContains(response, "Compared with other cars like this")
-        self.assertContains(response, "All 2016 cars")
+        self.assertContains(response, "How this model compares")
+        self.assertContains(response, "of all 2016 cars")
         self.assertContains(response, "more often than")
         self.assertContains(response, "miles a year")             # mileage comparison shown
         self.assertContains(response, "Open Government Licence v3.0")
@@ -262,8 +262,8 @@ class ReportComparisonPageTests(TestCase):
     def test_report_explains_when_there_is_too_little_data(self):
         make_rate(model_year_key="other", model="FOCUS")   # marts loaded, but no 2016 Fiesta group
         response = self.client.get("/report/SAMPLE1/")
-        self.assertContains(response, "weren't enough MOT tests")
+        self.assertContains(response, "aren't enough MOT tests")
 
     def test_section_is_hidden_until_marts_are_loaded(self):
         response = self.client.get("/report/SAMPLE1/")
-        self.assertNotContains(response, "Compared with other cars like this")
+        self.assertNotContains(response, "How this model compares")

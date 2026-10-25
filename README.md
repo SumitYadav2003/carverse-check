@@ -16,7 +16,7 @@ Behind the website is a data pipeline that cleans DVSA's anonymised record of ev
 
 - **Four checks on the car's own history**: recorded mileage that went down, dangerous defects, the same advisory at more than one MOT, and gaps of more than about 14 months with no MOT. Every finding links to the MOT tests it came from.
 - **MOT status**: whether the MOT is valid today and for how long.
-- **Comparison with similar cars**: how often cars of the same make, model and year of first use failed their first MOT attempt, against all cars of that age. Each rate has a likely range, small groups get an adjusted estimate, and a funnel plot shows where the model sits among all models of its age.
+- **Comparison with similar cars**: how often cars of the same make, model and year of first use failed their first MOT attempt, against all cars of that age. A simple scale shows where the model sits among all models of its age. Each rate has a likely range, small groups get an adjusted estimate, and the full funnel plot is one click away.
 - **Mileage against similar cars**: the car's average miles a year, placed within the spread for its model and age.
 - **Questions to ask the seller**: a printable checklist built from the car's findings, its latest advisories cross-referenced with the areas its model fails on more often, and the model's other weak spots.
 
@@ -83,7 +83,7 @@ Every push runs four GitHub Actions jobs:
 
 | Job | What it does |
 |---|---|
-| Django tests | 83 unit tests, migration check, Django's production deployment check |
+| Django tests | 87 unit tests, migration check, Django's production deployment check |
 | Pipeline | Generates sample data with the same quirks as the real files, runs the Prefect flow, then runs it again and requires it to skip everything |
 | Browser tests | 16 Playwright tests in Chromium, including axe accessibility checks on 12 pages |
 | Lighthouse | Runs the site with production settings under gunicorn and fails below 95 for accessibility or 90 for best practices. The latest run scored 98 to 100 on every page tested |

@@ -1,5 +1,5 @@
 """
-"Compared with other cars like this": looks up the dbt mart rows for a vehicle's make, model
+"How this model compares": looks up the dbt mart rows for a vehicle's make, model
 and year of first use, and prepares what the report page shows.
 
 The wording is deliberately careful. These figures describe how a model did across many
@@ -213,19 +213,16 @@ def mileage_comparison(row, miles_per_year, label):
         return None
     p10, p25, p50, p75, p90 = p
     if miles_per_year < p10:
-        band, text = "low", (f"Lower than 9 in 10 {label}. Genuinely low mileage is good news, "
-                             "but ask for service records or old receipts that show the mileage, "
-                             "so you can see it's real.")
+        band, text = "low", (f"Lower than 9 in 10 {label}. Good news if it's genuine, so ask for "
+                             "service records that back it up.")
     elif miles_per_year < p25:
         band, text = "below", f"Lower than most {label}."
     elif miles_per_year <= p75:
-        band, text = "typical", f"Typical for {label}."
+        band, text = "typical", f"About normal for {label}."
     elif miles_per_year <= p90:
-        band, text = "above", (f"Higher than most {label}. More miles usually means more wear, "
-                               "so the service history matters more.")
+        band, text = "above", f"Higher than most {label}, so the service history matters more."
     else:
-        band, text = "high", (f"Higher than 9 in 10 {label}. More miles usually means more wear, "
-                              "so the service history matters more.")
+        band, text = "high", f"Higher than 9 in 10 {label}, so the service history matters more."
 
     scale = max(p90 * 1.25, miles_per_year * 1.08)
 
