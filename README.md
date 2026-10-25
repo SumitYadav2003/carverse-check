@@ -6,7 +6,7 @@ A free used-car check for UK buyers. You type a number plate; it reads the car's
 
 Behind the website is a data pipeline that cleans DVSA's anonymised record of every MOT test in Great Britain in 2024 (42.6 million tests), checks its own totals against DVSA's published statistics, and only publishes figures that pass every test.
 
-<!-- Live site: add the link here once it's deployed -->
+**Live site: [carverse-check.onrender.com](https://carverse-check.onrender.com)** (try the demo car `SAMPLE3`). It's on a free plan, so after a quiet spell the first page can take up to a minute to load.
 
 | Home | A report | Explore models |
 |---|---|---|
@@ -37,7 +37,7 @@ flowchart LR
     P -.-> D
 ```
 
-The per-car history is fetched live from the DVSA MOT history API. The comparisons come from the bulk data, which is processed on my laptop; only the small summary tables (17,460 make, model and year groups) are copied to the website.
+The site runs on Render and the database on Neon Postgres, both in Frankfurt. The per-car history is fetched live from the DVSA MOT history API. The comparisons come from the bulk data, which is processed on my laptop; only the small summary tables (17,460 make, model and year groups) are copied to the website.
 
 ### The pipeline
 
